@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Shortlinks</title>
+    <meta name="description" content="Create shortlinks, quickly and with extensibility.">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2.0.6/css/pico.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;700&display=swap" rel="stylesheet">
+    <script src="modal.js"></script>
+    <style>
+      :root {
+        --pico-font-family: "Chakra Petch", sans-serif!important;
+      }
+      .hero{
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .hero *:not(.hero * *){
+        margin: auto 1rem;
+      }
+    </style>
+    <script>
+      async function submitLink(e) {
+        e.preventDefault();
+        const data = new FormData(event.target);
+        const res = await fetch("/", {
+          method: "post",
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            'link': data.get('link'),
+            'requestedCode': data.get('requestedCode')
+          })
+        });
+        const code = await res.text();
+        const modal = document.getElementById("result-modal");
+        modal.getElementsByTagName("h3")[0].innerText = "Status " + res.status;
+        if(res.status == 200){
+          modal.getElementsByTagName("p")[0].innerText = "Redirect created on path /"+code;
+          let a = document.createElement("a");
+          a.setAttribute("role", "button");
+          a.innerText = "Follow New Link";
+          a.href = "/" + code;
+          modal.getElementsByTagName("footer")[0].prepend(a);
+        }
+        else
+          modal.getElementsByTagName("p")[0].innerText = "Error creating redirect: "+code;
+        openModal(modal);
+      }
+    </script>
+  </head>
+  <body>
+    <main class="hero container">
+      <form onsubmit="submitLink(event)">
+        <h1>Shortlinks Web Frontend</h1>
+        <hr /><br />
+        <label for="link">Long Link (REQUIRED)</label>
+        <input type="text" placeholder="Long Link" name="link" />
+        <label for="requestedCode">Short Path (OPTIONAL)</label>
+        <input type="text" placeholder="SuperCoolLink" name="requestedCode" />
+        <input type="submit" value="Create Shortlink" />
+      </form>
+    </main>
+    <dialog id="result-modal">
+      <article>
+        <header>
+          <h3>Shortlink Request Submitted</h3>
+        </header>
+        <p></p>
+        <footer>
+          <button autofocus data-target="result-modal" onclick="toggleModal(event)">Okay</button>
+        </footer>
+      </article>
+    </dialog>
+  </body>
+</html>
