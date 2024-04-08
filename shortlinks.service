@@ -1,0 +1,14 @@
+[Unit]
+Description=Shortlinks API and Webserver
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/var/www/shortlinks/
+ExecStartPre=sh -c "bun i"
+ExecStart=bun run host
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
