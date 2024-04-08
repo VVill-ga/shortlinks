@@ -1,0 +1,9 @@
+{
+  "name": "shortlinks",
+  "module": "index.js",
+  "type": "module",
+  "scripts": {
+    "clean": "rm links.db",
+    "host": "bun index.js"
+  }
+}
