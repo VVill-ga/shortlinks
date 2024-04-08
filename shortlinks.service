@@ -5,9 +5,10 @@ Wants=network-online.target
 
 [Service]
 Type=simple
+User=vvill
 WorkingDirectory=/var/www/shortlinks/
-ExecStartPre=sh -c "bun i"
-ExecStart=bun run host
+ExecStartPre=/home/vvill/.bun/bin/bun i
+ExecStart=/home/vvill/.bun/bin/bun run index.js
 Restart=always
 
 [Install]
