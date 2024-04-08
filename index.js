@@ -5,7 +5,7 @@ const db = new Database("links.db");
 function createRedirect(body){
   let code = body.requestedCode;
   if(code){
-    console.log("Creating: ", data.requestedCode)
+    console.log("Creating: ", body.requestedCode)
     db.query("INSERT INTO links (code, link) VALUES (?1, ?2)").run(body.requestedCode, body.link);
   }
   else{
