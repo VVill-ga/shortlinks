@@ -32,7 +32,7 @@ sudo systemctl start shortlinks
 
 ### Responses
 - **200**: `"{Shortlink code (text after '/')}"`
-- **400**: `"Missing Destination Link"`
+- **400**: `"Missing Destination Link" || "Error Parsing JSON"`
 - **409**: `"Request for specific path denied"`
 
 ## Acknowledgements
