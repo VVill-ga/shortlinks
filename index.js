@@ -41,8 +41,11 @@ const server = Bun.serve({
         break;
 
       case "POST":
-        const data = await req.json();
-        console.log(data);
+        try{
+          const data = await req.json();
+        } catch(err){
+          return new Response("Error parsing JSON body", {status: 400});
+        }
         if(!data.link)
           return new Response("Missing destination link", {status: 400});
         if(data.requestedCode){
