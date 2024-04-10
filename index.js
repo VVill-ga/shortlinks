@@ -41,8 +41,9 @@ const server = Bun.serve({
         break;
 
       case "POST":
+        let data;
         try{
-          const data = await req.json();
+          data = await req.json();
         } catch(err){
           return new Response("Error parsing JSON body", {status: 400});
         }
