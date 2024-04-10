@@ -48,6 +48,9 @@
           a.setAttribute("role", "button");
           a.innerText = "Follow New Link";
           a.href = "/" + code;
+          let existingLinks = modal.getElementsByTagName("footer")[0].getElementsByTagName('a')
+          if(existingLinks.length)
+            modal.removeChild(existingLinks[0])
           modal.getElementsByTagName("footer")[0].prepend(a);
         }
         else
