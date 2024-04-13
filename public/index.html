@@ -25,6 +25,11 @@
       }
     </style>
     <script>
+      function copyLink(e) {
+        let link = window.location.origin + "/" + e.target.getAttribute("code");
+        navigator.clipboard.writeText(link);
+        window.alert("Copied text: " + link);
+      }
       async function submitLink(e) {
         e.preventDefault();
         const data = new FormData(event.target);
@@ -42,16 +47,20 @@
         const code = await res.text();
         const modal = document.getElementById("result-modal");
         modal.getElementsByTagName("h3")[0].innerText = "Status " + res.status;
+        // Replace copy link button
+        let existingLinks = modal.getElementsByTagName("footer")[0].getElementsByClassName("secondary")
+        if(existingLinks.length)
+          modal.removeChild(existingLinks[0])
         if(res.status == 200){
-          modal.getElementsByTagName("p")[0].innerText = "Redirect created on path /"+code;
-          let a = document.createElement("a");
-          a.setAttribute("role", "button");
-          a.innerText = "Follow New Link";
-          a.href = "/" + code;
-          let existingLinks = modal.getElementsByTagName("footer")[0].getElementsByTagName('a')
-          if(existingLinks.length)
-            modal.removeChild(existingLinks[0])
-          modal.getElementsByTagName("footer")[0].prepend(a);
+          let link = window.location.origin + "/" + code;
+          modal.getElementsByTagName("p")[0].innerText = "Redirect created at " + link;
+          let button = document.createElement("button");
+          button.setAttribute("code", code);
+          button.classList.add("secondary");
+          button.innerText = "Copy to Clipboard";
+          button.onclick = copyLink;
+
+          modal.getElementsByTagName("footer")[0].prepend(button);
         }
         else
           modal.getElementsByTagName("p")[0].innerText = "Error creating redirect: "+code;
