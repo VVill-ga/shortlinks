@@ -2,6 +2,15 @@
 
 A simple Bun webserver for creating and utilizing url redirects with a PicoCSS driven web front end. Best if used with a short domain name!
 
+<p align="center">
+  <table align="center"><tbody><td align="center">
+    <p align="center">If you are looking for Shortlinks CLI,</p> 
+    <a href="https://github.com/VVill-ga/shortlinks-cli">
+      <img alt="Shortlinks CLI" src="https://img.shields.io/badge/Click%20Here-blue?style=for-the-badge">
+    </a>
+  </td></tbody></table>
+</p>
+
 ### Testing
 ```bash
 bun i          # Installs node modules
