@@ -20,7 +20,7 @@ curl -fsSL https://bun.sh/install | bash
 
 ### Testing
 ```bash
-SHORTLINKS_PORT=<test_port> # Server will run on this port
+SHORTLINKS_PORT=7000 # Server will run on this port
 bun i          # Installs node modules
 bun run host   # Hosts shortlinks server
 # To reset:
