@@ -1,0 +1,7 @@
+node_modules/
+links.db
+bun.lockb
+shortlinks.service
+shortlinks.service.template
+.git
+.gitignore

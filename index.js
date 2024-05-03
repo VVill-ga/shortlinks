@@ -21,7 +21,7 @@ function createRedirect(body){
 }
 
 const server = Bun.serve({
-  port: 7000,
+  port: process.env.SHORTLINKS_PORT || 80,
   async fetch(req) {
     switch(req.method){
       case "GET":

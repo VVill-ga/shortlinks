@@ -19,15 +19,25 @@ curl -fsSL https://bun.sh/install | bash
 
 ### Testing
 ```bash
+SHORTLINKS_PORT=<test_port> # Server will run on this port
 bun i          # Installs node modules
-bun run host   # Hosts shortlinks server on port 7000
+bun run host   # Hosts shortlinks server
+# To reset:
 bun run clean  # Deletes links.db
 ```
 
+### Production (Docker)
+```bash
+docker build -t shortlinks .
+docker run --name shortlinks -p <DESIRED_PORT>:80 -d shortlinks
+```
+
+*or*
+
 ### Production (Systemd)
 ```bash
-# edit shortlinks.service.template, replacing all <TOKENS>
-mv shortlinks.service.template /usr/lib/systemd/system/shortlinks.service
+# edit shortlinks.service.template, replacing all <TOKENS> (ctrl-f < works well)
+sudo mv shortlinks.service.template /usr/lib/systemd/system/shortlinks.service
 sudo systemctl daemon-reload
 sudo systemctl enable shortlinks
 sudo systemctl start shortlinks
