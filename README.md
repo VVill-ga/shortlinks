@@ -11,6 +11,12 @@ A simple Bun webserver for creating and utilizing url redirects with a PicoCSS d
   </td></tbody></table>
 </p>
 
+### Step One: Install [Bun](https://bun.sh)
+
+```bash
+curl -fsSL https://bun.sh/install | bash
+```
+
 ### Testing
 ```bash
 bun i          # Installs node modules
