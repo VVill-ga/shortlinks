@@ -48,9 +48,9 @@
         const modal = document.getElementById("result-modal");
         modal.getElementsByTagName("h3")[0].innerText = "Status " + res.status;
         // Replace copy link button
-        let existingLinks = modal.getElementsByTagName("footer")[0].getElementsByClassName("secondary")
+        let existingLinks = modal.getElementsByTagName("footer")[0].getElementsByClassName("secondary");
         if(existingLinks.length)
-          modal.removeChild(existingLinks[0])
+          existingLinks[0].remove();
         if(res.status == 200){
           let link = window.location.origin + "/" + code;
           modal.getElementsByTagName("p")[0].innerText = "Redirect created at " + link;
