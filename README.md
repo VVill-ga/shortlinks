@@ -14,6 +14,7 @@ A simple Bun webserver for creating and utilizing url redirects with a PicoCSS d
 ### Step One: Install [Bun](https://bun.sh)
 
 ```bash
+# NOTE: Not required for deployment via Docker.
 curl -fsSL https://bun.sh/install | bash
 ```
 
