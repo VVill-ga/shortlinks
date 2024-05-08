@@ -83,10 +83,15 @@
           Go.
         </p>
         <br />
-        <label for="link">Long Link (REQUIRED)</label>
-        <input type="text" placeholder="Long Link" name="link" />
-        <label for="requestedCode">Short Path (OPTIONAL)</label>
-        <input type="text" placeholder="SuperCoolLink" name="requestedCode" />
+        <label for="link">Long Link</label>
+        <input type="text" placeholder="https://randomsubdomain.superlonglinks.com/random_id_code/another_random_id?seemingly=unimportant&unnecessarily_long=true#important" name="link" />
+        <article>
+          <details style="margin:0;">
+            <summary>More Options</summary>
+            <label for="requestedCode">Short Path</label>
+            <input type="text" placeholder="SuperCoolLink" name="requestedCode" />
+          </details>
+        </article>
         <input type="submit" value="Create Shortlink" />
       </form>
     </main>
