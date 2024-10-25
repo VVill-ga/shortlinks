@@ -3,7 +3,7 @@
   "module": "index.js",
   "type": "module",
   "scripts": {
-    "clean": "rm links.db",
+    "clean": "rm database/links.db",
     "host": "bun index.js"
   }
 }

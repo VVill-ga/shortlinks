@@ -11,14 +11,30 @@ A simple Bun webserver for creating and utilizing url redirects with a PicoCSS d
   </td></tbody></table>
 </p>
 
-### Step One: Install [Bun](https://bun.sh)
+### Production (Docker)
+Build the docker image from source locally
+```bash
+docker build -t shortlinks .
+```
+
+Start docker container
+```bash
+# Replace /etc/shortlinks with host path to database
+# Replace 6134 with desired external port
+docker run --name shortlinks -v /etc/shortlinks:/usr/src/app/database -p 6134:80 -d shortlinks
+```
+
+*or*
+
+### Production (Systemd)
+#### Step One: Install [Bun](https://bun.sh)
 
 ```bash
 # NOTE: Not required for deployment via Docker.
 curl -fsSL https://bun.sh/install | bash
 ```
 
-### Testing
+#### Testing
 ```bash
 SHORTLINKS_PORT=7000 # Server will run on this port
 bun i          # Installs node modules
@@ -27,15 +43,7 @@ bun run host   # Hosts shortlinks server
 bun run clean  # Deletes links.db
 ```
 
-### Production (Docker)
-```bash
-docker build -t shortlinks .
-docker run --name shortlinks -p <DESIRED_PORT>:80 -d shortlinks
-```
-
-*or*
-
-### Production (Systemd)
+#### Deployment
 ```bash
 # edit shortlinks.service.template, replacing all <TOKENS> (ctrl-f < works well)
 sudo mv shortlinks.service.template /usr/lib/systemd/system/shortlinks.service
