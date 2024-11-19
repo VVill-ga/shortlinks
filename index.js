@@ -1,6 +1,6 @@
 import {Database} from "bun:sqlite";
 
-const db = new Database("links.db");
+const db = new Database("./database/links.db");
 
 function createRedirect(body){
   let code = body.requestedCode;
