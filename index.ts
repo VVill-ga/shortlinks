@@ -1,5 +1,8 @@
 import {Database} from "bun:sqlite";
-const db = new Database("links.db");
+const db = new Database("./database/links.db");
+
+type dbRow = {code: string, link: string}
+db.query("CREATE TABLE IF NOT EXISTS links (code TEXT PRIMARY KEY, link TEXT)").run();
 
 /**
  * Random Shortlink Path Generator
@@ -25,22 +28,15 @@ function generateCode(): string {
  * 
  * @returns 
  */
-function createRedirect({link, requestedCode=null}): Response {
-  let code = requestedCode;
-  if(code){
-    console.log("Creating: ", requestedCode)
-    db.query("INSERT INTO links (code, link) VALUES (?1, ?2)").run(requestedCode, link);
-  }
-  else{
-    db.query("INSERT INTO links (code, link) VALUES (?1, ?2)").run(code, link);
-  }
-
+function createRedirect({link, requestedCode=undefined}: {link: string, requestedCode?: string}): Response {
+  let code = requestedCode || generateCode();
+  db.query("INSERT INTO links (code, link) VALUES (?1, ?2)").run(code, link);
   return new Response(code, {status: 200});
 }
 
 const server = Bun.serve({
   port: Number(process.env.SHORTLINKS_PORT) || 80,
-  async fetch(req) {
+  async fetch(req): Promise<Response> {
     switch(req.method){
       case "GET":
         let filepath = "public" + new URL(req.url).pathname;
@@ -50,7 +46,7 @@ const server = Bun.serve({
         if(file.size) // Invalid paths create a file with size 0
           return new Response(file);
         else{
-          const sqlResult = db.query("SELECT link FROM links WHERE code=?").get(new URL(req.url).pathname.slice(1));
+          const sqlResult = db.query("SELECT link FROM links WHERE code=?").get(new URL(req.url).pathname.slice(1)) as dbRow;
           if(sqlResult && sqlResult.link)
             return new Response(null, {headers: {Location: sqlResult.link}, status: 302});
           else
@@ -80,9 +76,9 @@ const server = Bun.serve({
         return createRedirect(data);
         break;
     }
+    return new Response(null, {status: 404});
   },
 });
 
-db.query("CREATE TABLE IF NOT EXISTS links (code TEXT PRIMARY KEY, link TEXT)").run();
 
 console.log(`Server running on port ${server.port}`);
