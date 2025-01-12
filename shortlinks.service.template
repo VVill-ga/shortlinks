@@ -9,7 +9,7 @@ User=<USER_THAT_INSTALLED_BUN>
 WorkingDirectory=<PATH_TO_THIS_FOLDER>shortlinks/
 Environment="SHORTLINKS_PORT=<PORT>"
 ExecStartPre=<ABSOLUTE_PATH_TO>bun i
-ExecStart=<ABSOLUTE_PATH_TO>bun run index.js
+ExecStart=<ABSOLUTE_PATH_TO>bun run index.ts
 Restart=always
 
 [Install]
