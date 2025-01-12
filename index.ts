@@ -1,27 +1,45 @@
 import {Database} from "bun:sqlite";
-
 const db = new Database("links.db");
 
-function createRedirect(body){
-  let code = body.requestedCode;
+/**
+ * Random Shortlink Path Generator
+ * @returns String - A random 3 letter code
+ */
+function generateCode(): string {
+  let code: string;
+  do{
+    code = ""
+    for(let i = 0; i < 3; i++)
+      code += String.fromCharCode(Math.floor(Math.random() * 26)+65)
+  }while(db.query("SELECT link FROM links WHERE code=?").get(code) || Bun.file('/'+code).size || Bun.file('/'+code+'/index.html').size)
+
+  return code;
+}
+
+/**
+ * Creates a redirect in the database
+ * 
+ * @param {{link: string, requestedCode: string}} body 
+ * @param {string} body.link - The link to be redirected to
+ * @param {string} body.requestedCode - The path to be directed to the link
+ * 
+ * @returns 
+ */
+function createRedirect({link, requestedCode=null}): Response {
+  let code = requestedCode;
   if(code){
-    console.log("Creating: ", body.requestedCode)
-    db.query("INSERT INTO links (code, link) VALUES (?1, ?2)").run(body.requestedCode, body.link);
+    console.log("Creating: ", requestedCode)
+    db.query("INSERT INTO links (code, link) VALUES (?1, ?2)").run(requestedCode, link);
   }
   else{
-    do{
-      code = ""
-      for(let i = 0; i < 3; i++)
-        code += String.fromCharCode(Math.floor(Math.random() * 26)+65)
-    }while(db.query("SELECT link FROM links WHERE code=?").get(code) || Bun.file('/'+code).size || Bun.file('/'+code+'/index.html').size)
-    db.query("INSERT INTO links (code, link) VALUES (?1, ?2)").run(code, body.link);
+    db.query("INSERT INTO links (code, link) VALUES (?1, ?2)").run(code, link);
   }
 
   return new Response(code, {status: 200});
 }
 
 const server = Bun.serve({
-  port: process.env.SHORTLINKS_PORT || 80,
+  port: Number(process.env.SHORTLINKS_PORT) || 80,
   async fetch(req) {
     switch(req.method){
       case "GET":
