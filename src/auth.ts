@@ -54,6 +54,16 @@ export function createUser(name: string, password: string, admin: boolean, db: D
     return secret.utf8;
 }
 
+export async function attemptLogin(req: Request, db: Database){
+    let data = await req.json();
+    if(!data.username || !data.password || !data.otp)
+        return new Response("Missing username, password, or OTP", {status: 400});
+    const token = loginUser(data.username, data.password, data.otp, db);
+    if(!token)
+        return new Response("Invalid username, password, or OTP", {status: 401});
+    return new Response(JSON.stringify({token}), {status: 200});
+}
+
 export function loginUser(name: string, password: string, otp: string, db: Database){
     const user = db.query("SELECT * FROM users WHERE name=?").get(name) as User;
     if(!user) return false;
@@ -67,7 +77,7 @@ export function loginUser(name: string, password: string, otp: string, db: Datab
     return createToken(name);
 }
 
-export function createToken(name: string): string{
+function createToken(name: string): string{
     const token = crypto.randomUUID();
     const expires = new Date();
     // Tokens last 24 hours

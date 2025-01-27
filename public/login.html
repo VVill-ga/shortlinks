@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Login to Shortlinks</title>
+        <meta name="description" content="Log in to your Shortlinks server.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="color-scheme" content="light dark">
+        <link rel="icon" href="/favicon.ico" sizes="32x32">
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2.0.6/css/pico.min.css">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;700&display=swap" rel="stylesheet">
+        <style>
+            :root {
+                --pico-font-family: "Chakra Petch", sans-serif!important;
+            }
+            .hero{
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+            .hero *:not(.hero * *){
+                margin: auto 1rem;
+            }
+        </style>
+        <script>
+            function submitLogin(e) {
+                e.preventDefault();
+                let username = e.target.username.value;
+                let password = e.target.password.value;
+                let otp = e.target.otp.value;
+                fetch("/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ username, password, otp })
+                }).then(response => {
+                    if (response.ok) {
+                        response.json().then(data => {
+                            localStorage.setItem("token", data.token);
+                            localStorage.setItem("username", username);
+                        })
+                        window.location.href = "/";
+                    } else {
+                        alert("Invalid username or password");
+                    }
+                });
+            }
+        </script>
+    </head>
+    <body>
+        <main class="hero container">
+            <form onsubmit="submitLogin(event)">
+                <h1>Login to Shortlinks</h1>
+                <hr />
+                <p>Log in to your Shortlinks server.</p>
+                <br />
+                <label for="username">Username</label>
+                <input type="text" placeholder="Username" name="username" />
+                <label for="password">Password</label>
+                <input type="password" placeholder="Password" name="password" />
+                <label for="otp">OTP</label>
+                <input type="password" placeholder="OTP" name="otp" />
+                <input type="submit" value="Login" />
+            </form>
+        </main>
+    </body>
+</html>
