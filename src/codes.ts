@@ -1,4 +1,4 @@
-const codesFile = Bun.file("../database/codes.3.txt");
+const codesFile = Bun.file("./database/codes.3.txt");
 let codes: number[] = []
 
 /**

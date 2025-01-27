@@ -23,7 +23,7 @@ export function initAuth(db: Database){
         return;
     }
     const secret = new OTPAuth.Secret();
-    db.query("INSERT INTO users (name, password, secret, admin) VALUES (?1, ?2, ?3, true)").run(defaultUsername, defaultPassword, secret.utf8);
+    db.query("INSERT INTO users (name, password, secret, admin) VALUES (?1, ?2, ?3, true)").run(defaultUsername, defaultPassword, secret.base32);
     
     const authURI = OTPAuth.URI.stringify(new OTPAuth.TOTP({
         issuer: "shortlinks",
@@ -32,10 +32,10 @@ export function initAuth(db: Database){
     }))
 
     // Export the admin secret to a file
-    Bun.write(Bun.file("../temp/admin.secret"), authURI);
+    Bun.write(Bun.file("./temp/admin.secret"), authURI);
 
     // Export the admin secret to a qr code image file
-    qrcode.toFile("../temp/admin.secret.png", authURI);
+    qrcode.toFile("./temp/admin.secret.png", authURI);
 
     // Print the admin secret qr code to the console
     qrcode.toString(authURI, {type:'terminal', small: true}, function (err, url) {
@@ -50,8 +50,8 @@ export function createUser(name: string, password: string, admin: boolean, db: D
     const exists = db.query("SELECT * FROM users WHERE name=?").get(name);
     if(exists) return "";
     const secret = new OTPAuth.Secret();
-    db.query("INSERT INTO users (name, password, secret, admin) VALUES (?1, ?2, ?3, ?4)").run(name, password, secret.utf8, admin);
-    return secret.utf8;
+    db.query("INSERT INTO users (name, password, secret, admin) VALUES (?1, ?2, ?3, ?4)").run(name, password, secret.base32, admin);
+    return secret.base32;
 }
 
 export async function attemptLogin(req: Request, db: Database){
@@ -71,9 +71,9 @@ export function loginUser(name: string, password: string, otp: string, db: Datab
     let totp = new OTPAuth.TOTP({
         issuer: "shortlinks",
         label: name,
-        secret: user.secret
+        secret: OTPAuth.Secret.fromBase32(user.secret)
     });
-    if(!totp.validate({token: otp})) return false;
+    if(totp.validate({token: otp}) == null) return false;
     return createToken(name);
 }
 

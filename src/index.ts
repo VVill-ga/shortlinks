@@ -2,7 +2,7 @@ import {Database} from "bun:sqlite";
 import { attemptLogin, initAuth, loginUser } from "./auth";
 import { initCodesFile } from "./codes";
 import { createRedirect, postRedirect } from "./links";
-const db = new Database("../database/links.db");
+const db = new Database("./database/links.db");
 
 type dbRow = {code: string, link: string}
 db.query("CREATE TABLE IF NOT EXISTS links (code TEXT PRIMARY KEY, link TEXT)").run();
@@ -11,11 +11,11 @@ initCodesFile();
 
 
 const server = Bun.serve({
-  port: Number(process.env.SHORTLINKS_PORT) || 80,
+  port: Number(process.env.SHORTLINKS_PORT) || 8008,
   async fetch(req): Promise<Response> {
     switch(req.method){
       case "GET":
-        let filepath = "../public" + new URL(req.url).pathname;
+        let filepath = "./public" + new URL(req.url).pathname;
         if(filepath.slice(-1) == "/")
           filepath += "index.html";
         const file = Bun.file(filepath);
@@ -32,11 +32,11 @@ const server = Bun.serve({
 
       case "POST":
         switch(new URL(req.url).pathname){
-          case "/":
-            return await postRedirect(req, db);
-            break;
           case "/login":
             return await attemptLogin(req, db);
+            break;
+          case "/":
+            return await postRedirect(req, db);
             break;
           default:
             return new Response("Invalid endpoint", {status: 404});
