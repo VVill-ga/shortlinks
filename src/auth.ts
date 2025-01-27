@@ -32,10 +32,10 @@ export function initAuth(db: Database){
     }))
 
     // Export the admin secret to a file
-    Bun.write(Bun.file("./temp/admin.secret"), authURI);
+    Bun.write(Bun.file("../temp/admin.secret"), authURI);
 
     // Export the admin secret to a qr code image file
-    qrcode.toFile("./temp/admin.secret.png", authURI);
+    qrcode.toFile("../temp/admin.secret.png", authURI);
 
     // Print the admin secret qr code to the console
     qrcode.toString(authURI, {type:'terminal', small: true}, function (err, url) {

@@ -1,11 +1,12 @@
 import {Database} from "bun:sqlite";
 import { initAuth } from "./auth";
-import { generateCode } from "./codes";
-const db = new Database("./database/links.db");
+import { generateCode, initCodesFile } from "./codes";
+const db = new Database("../database/links.db");
 
 type dbRow = {code: string, link: string}
 db.query("CREATE TABLE IF NOT EXISTS links (code TEXT PRIMARY KEY, link TEXT)").run();
 initAuth(db);
+initCodesFile();
 
 /**
  * Creates a redirect in the database
@@ -27,7 +28,7 @@ const server = Bun.serve({
   async fetch(req): Promise<Response> {
     switch(req.method){
       case "GET":
-        let filepath = "public" + new URL(req.url).pathname;
+        let filepath = "../public" + new URL(req.url).pathname;
         if(filepath.slice(-1) == "/")
           filepath += "index.html";
         const file = Bun.file(filepath);
@@ -55,8 +56,8 @@ const server = Bun.serve({
           console.log("Recieved request for : ", data.requestedCode)
           if(!data.requestedCode.match(/^([0-9]|[a-z])+([0-9a-z]+)$/i))
             return new Response("Requested path denied. Either non alphanumeric characters were used or the length was less than 2.", {status: 409})
-          const checkFolder = Bun.file("public/" + data.requestedCode + "index.html");
-          const checkFile = Bun.file("public/" + data.requestedCode);
+          const checkFolder = Bun.file("../public/" + data.requestedCode + "index.html");
+          const checkFile = Bun.file("../public/" + data.requestedCode);
           const checkSQL = db.query("SELECT link FROM links WHERE code=?").get(data.requestedCode);
           if(checkFolder.size || checkFile.size || checkSQL)
             return new Response("Requested path denied. Path exists.", {status: 409})

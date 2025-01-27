@@ -1,4 +1,4 @@
-const codesFile = Bun.file("./database/codes.3.txt");
+const codesFile = Bun.file("../database/codes.3.txt");
 let codes: number[] = []
 
 /**
@@ -50,10 +50,12 @@ async function readCodesFromFile() {
   }
 }
 
-if(!await codesFile.exists())
-  initCodes();
-else
-  readCodesFromFile();
+export async function initCodesFile() {
+  if(!await codesFile.exists())
+    initCodes();
+  else
+    readCodesFromFile();
+}
 
 /**
  * Random Shortlink Path Generator
