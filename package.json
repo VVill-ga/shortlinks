@@ -5,5 +5,10 @@
   "scripts": {
     "clean": "rm database/links.db",
     "host": "bun index.ts"
+  },
+  "dependencies": {
+    "@types/qrcode": "^1.5.5",
+    "qrcode": "^1.5.4",
+    "otpauth": "^9.3.6"
   }
 }

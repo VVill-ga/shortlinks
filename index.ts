@@ -1,10 +1,12 @@
 import {Database} from "bun:sqlite";
+import { initAuth } from "./auth";
 const db = new Database("./database/links.db");
 const codesFile = Bun.file("./database/codes.3.txt");
 let codes: number[]
 
 type dbRow = {code: string, link: string}
 db.query("CREATE TABLE IF NOT EXISTS links (code TEXT PRIMARY KEY, link TEXT)").run();
+initAuth(db);
 
 /**
  * Converts an index to a 3 letter code

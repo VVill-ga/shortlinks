@@ -2,3 +2,5 @@ node_modules/
 links.db
 bun.lockb
 shortlinks.service
+temp/
+database/
