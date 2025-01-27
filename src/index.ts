@@ -1,6 +1,7 @@
 import {Database} from "bun:sqlite";
 import { initAuth } from "./auth";
-import { generateCode, initCodesFile } from "./codes";
+import { initCodesFile } from "./codes";
+import { createRedirect } from "./links";
 const db = new Database("../database/links.db");
 
 type dbRow = {code: string, link: string}
@@ -8,20 +9,6 @@ db.query("CREATE TABLE IF NOT EXISTS links (code TEXT PRIMARY KEY, link TEXT)").
 initAuth(db);
 initCodesFile();
 
-/**
- * Creates a redirect in the database
- * 
- * @param {{link: string, requestedCode: string}} body 
- * @param {string} body.link - The link to be redirected to
- * @param {string} body.requestedCode - The path to be directed to the link
- * 
- * @returns 
- */
-function createRedirect({link, requestedCode=undefined}: {link: string, requestedCode?: string}): Response {
-  let code = requestedCode || generateCode();
-  db.query("INSERT INTO links (code, link) VALUES (?1, ?2)").run(code, link);
-  return new Response(code, {status: 200});
-}
 
 const server = Bun.serve({
   port: Number(process.env.SHORTLINKS_PORT) || 80,
@@ -62,7 +49,7 @@ const server = Bun.serve({
           if(checkFolder.size || checkFile.size || checkSQL)
             return new Response("Requested path denied. Path exists.", {status: 409})
         }
-        return createRedirect(data);
+        return createRedirect(data.link, db, data.requestedCode);
         break;
     }
     return new Response(null, {status: 404});

@@ -70,6 +70,7 @@ export function loginUser(name: string, password: string, otp: string, db: Datab
 export function createToken(name: string): string{
     const token = crypto.randomUUID();
     const expires = new Date();
+    // Tokens last 24 hours
     expires.setHours(expires.getHours() + 24);
     tokens.push({name, token, expires});
     return token as string;
