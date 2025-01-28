@@ -13,6 +13,12 @@ type User = {
     admin: boolean
 }
 
+/**
+ * Creates users table and admin user if they don't exist
+ * 
+ * @param db Reference to the Database
+ * @returns null
+ */
 export function initAuth(db: Database){
     db.query("CREATE TABLE IF NOT EXISTS users (name TEXT PRIMARY KEY, password TEXT, secret TEXT, admin BOOLEAN)").run();
 
@@ -46,6 +52,15 @@ export function initAuth(db: Database){
     })
 }
 
+/**
+ * Creates a new user
+ * 
+ * @param name User name
+ * @param password User Password
+ * @param admin Is User Admin
+ * @param db Reference to the Database
+ * @returns 
+ */
 export function createUser(name: string, password: string, admin: boolean, db: Database): string {
     const exists = db.query("SELECT * FROM users WHERE name=?").get(name);
     if(exists) return "";
@@ -54,6 +69,13 @@ export function createUser(name: string, password: string, admin: boolean, db: D
     return secret.base32;
 }
 
+/**
+ * Resolve /login post request
+ * 
+ * @param req HTTP Request to log in
+ * @param db Reference to the Database
+ * @returns HTTP Response
+ */
 export async function attemptLogin(req: Request, db: Database){
     let data = await req.json();
     if(!data.username || !data.password || !data.otp)
@@ -64,6 +86,15 @@ export async function attemptLogin(req: Request, db: Database){
     return new Response(JSON.stringify({token}), {status: 200});
 }
 
+/**
+ * Validates credentials and creates a session token
+ * 
+ * @param name User name
+ * @param password User Password
+ * @param otp TOTP generated code
+ * @param db Reference to the Database
+ * @returns 
+ */
 export function loginUser(name: string, password: string, otp: string, db: Database){
     const user = db.query("SELECT * FROM users WHERE name=?").get(name) as User;
     if(!user) return false;
@@ -77,6 +108,11 @@ export function loginUser(name: string, password: string, otp: string, db: Datab
     return createToken(name);
 }
 
+/**
+ * Creates a session token, expires in 24 hours
+ * @param name User name to create token for
+ * @returns The new session token
+ */
 function createToken(name: string): string{
     const token = crypto.randomUUID();
     const expires = new Date();
@@ -86,6 +122,11 @@ function createToken(name: string): string{
     return token as string;
 }
 
+/**
+ * Checks to see if session token is valid
+ * @param token Session token
+ * @returns Validity of the token
+ */
 export function verifyToken(token: string){
     const tokenData = tokens.find(t => t.token === token);
     if(!tokenData) return false;
@@ -96,6 +137,18 @@ export function verifyToken(token: string){
     return tokenData.name;
 }
 
+/**
+ * Removes a session token
+ * @param token Session token
+ */
 export function removeToken(token: string){
     tokens = tokens.filter(t => t.token !== token);
+}
+
+/**
+ * Remove all session tokens for a user
+ * @param name User name
+ */
+export function logoutUser(name: string){
+    tokens = tokens.filter(t => t.name !== name);
 }

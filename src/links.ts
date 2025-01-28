@@ -14,9 +14,16 @@ import { verifyToken } from "./auth";
 export function createRedirect(link: string, db: Database, requestedCode?: string): Response {
   let code = requestedCode || generateCode();
   db.query("INSERT INTO links (code, link) VALUES (?1, ?2)").run(code, link);
-  return new Response(code, {status: 200});
+  return new Response(code, {status: 201});
 }
 
+/**
+ * Parses a request to create a redirect
+ * 
+ * @param req HTTP Request contianing the destination link and requested path
+ * @param db Reference to the database
+ * @returns HTTP Response
+ */
 export async function postRedirect(req: Request, db: Database): Promise<Response> {
     const token = req.headers.get("Authorization")?.split(" ")[1];
     if(!token)

@@ -1,7 +1,7 @@
 import {Database} from "bun:sqlite";
-import { attemptLogin, initAuth, loginUser } from "./auth";
+import { attemptLogin, initAuth } from "./auth";
 import { initCodesFile } from "./codes";
-import { createRedirect, postRedirect } from "./links";
+import { postRedirect } from "./links";
 const db = new Database("./database/links.db");
 
 type dbRow = {code: string, link: string}
