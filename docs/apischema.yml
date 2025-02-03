@@ -1,0 +1,328 @@
+openapi: '3.0.3'
+info:
+  title: Shortlinks API
+  version: '1.0'
+servers:
+  - url: https://a.vvill.dev/
+paths:
+  /:
+    get:
+      description: Returns `index.html`
+      tags:
+        - HTML
+      responses:
+        '200':
+          description: OK
+    post:
+      description: Create a shortlink redirect in the database
+      tags:
+        - Shortlinks
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - link
+              properties:
+                link:
+                  type: string
+                  description: The URL to shorten
+                requestedCode:
+                  type: string
+                  description: The short code to use
+      responses:
+        '201':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: ACR
+        '400':
+          description: Missing destination link || Error parsing JSON
+        '401':
+          description: Unautherized || Unauthenticated
+        '409':
+          description: Request for specific path denied
+  /login:
+    get:
+      description: Returns login page
+      tags:
+        - HTML
+      responses:
+        '200':
+          description: OK
+    post:
+      description: Attempt to log in
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  description: The username to log in with
+                password:
+                  type: string
+                  description: The password to log in with
+                otp:
+                  type: string
+                  description: The TOTP code to log in with
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: <Session Token>
+        '400':
+          description: Missing username, password, or OTP
+        '401':
+          description: Invalid username or password
+  /logout:
+    post:
+      description: Log out and invalidate the session token
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+  /checkLogin:
+    post:
+      description: Check username and password for seperating OTP step
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  description: The username to log in with
+                password:
+                  type: string
+                  description: The password to log in with
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Invalid username or password
+  /links:
+    get:
+      description: Returns page to manage all Shortlinks
+      tags:
+        - HTML
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unautherized || Unauthenticated
+  /{code}:
+    get:
+      description: Redirects to the destination link for the shortlink
+      tags:
+        - Shortlinks
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '302':
+          description: OK
+        '404':
+          description: Shortlink not found
+    patch:
+      description: Change the destination link for a shortlink
+      tags:
+        - Shortlinks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - link
+              properties:
+                link:
+                  type: string
+                  description: The URL to shorten
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unautherized || Unauthenticated
+        '404':
+          description: Shortlink not found
+    delete:
+      description: Delete a shortlink from the database
+      tags:
+        - Shortlinks
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unautherized || Unauthenticated
+        '404':
+          description: Shortlink not found
+  /users:
+    get:
+      description: Returns page to manage all users
+      tags:
+        - HTML
+      responses:
+        '200':
+          description: OK
+      security:
+        - bearerAuth: []
+    post:
+      description: Create a new user
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - password
+              properties:
+                name:
+                  type: string
+                  description: The username to create
+                password:
+                  type: string
+                  description: The password to create
+                admin:
+                  type: boolean
+                  description: Is the user an admin?
+                  example: false
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: <OTP Secret>
+        '400':
+          description: Missing username or password
+        '401':
+          description: Unautherized || Unauthenticated
+        '409':
+          description: User already exists
+  /users/{name}:
+    get:
+      description: Returns information on a specific user
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  admin:
+                    type: boolean
+    patch:
+      description: Update a user in the database
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                admin:
+                  type: boolean
+                  description: Is the user an admin?
+                  example: false
+                password:
+                  type: string
+                  description: The new password to set
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unautherized || Unauthenticated
+        '404':
+          description: User not found
+    delete:
+      description: Delete a user from the database
+      tags:
+        - Admin
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unautherized || Unauthenticated
+        '404':
+          description: User not found
