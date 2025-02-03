@@ -70,6 +70,23 @@ export function createUser(name: string, password: string, admin: boolean, db: D
 }
 
 /**
+ * Checks password so frontend can continue to OTP
+ * 
+ * @param req HTTP Request to check password
+ * @param db Reference to the Database
+ * @returns 
+ */
+export async function checkPassword(req: Request, db: Database){
+    const data = await req.json();
+    const user = db.query("SELECT * FROM users WHERE name=?").get(data.username) as User;
+    if(!user)
+        return new Response(JSON.stringify(false), {status: 401});
+    return user.password === data.password?
+        new Response(JSON.stringify(true), {status: 200}) : 
+        new Response(JSON.stringify(false), {status: 401});
+}
+
+/**
  * Resolve /login post request
  * 
  * @param req HTTP Request to log in
@@ -83,7 +100,7 @@ export async function attemptLogin(req: Request, db: Database){
     const token = loginUser(data.username, data.password, data.otp, db);
     if(!token)
         return new Response("Invalid username, password, or OTP", {status: 401});
-    return new Response(JSON.stringify({token}), {status: 200});
+    return new Response(token, {status: 200});
 }
 
 /**

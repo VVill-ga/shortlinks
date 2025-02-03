@@ -39,8 +39,8 @@
                     body: JSON.stringify({ username, password, otp })
                 }).then(response => {
                     if (response.ok) {
-                        response.json().then(data => {
-                            localStorage.setItem("token", data.token);
+                        response.text().then(data => {
+                            localStorage.setItem("token", data);
                             localStorage.setItem("username", username);
                         })
                         window.location.href = "/";

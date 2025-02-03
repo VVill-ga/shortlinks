@@ -1,5 +1,5 @@
 import {Database} from "bun:sqlite";
-import { attemptLogin, initAuth } from "./auth";
+import { attemptLogin, checkPassword, initAuth } from "./auth";
 import { initCodesFile } from "./codes";
 import { postRedirect } from "./links";
 const db = new Database("./database/links.db");
@@ -28,20 +28,18 @@ const server = Bun.serve({
           else
             return new Response(null,  {status: 404});
         }
-        break;
 
       case "POST":
         switch(new URL(req.url).pathname){
+          case "/checklogin":
+            return await checkPassword(req, db);
           case "/login":
             return await attemptLogin(req, db);
-            break;
           case "/":
             return await postRedirect(req, db);
-            break;
           default:
             return new Response("Invalid endpoint", {status: 404});
         }
-        break;
     }
     return new Response(null, {status: 404});
   },
