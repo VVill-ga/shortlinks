@@ -2,6 +2,8 @@ import {Database} from "bun:sqlite";
 import { generateCode } from "./codes";
 import { verifyToken } from "./auth";
 
+type dbRow = {code: string, link: string}
+
 /**
  * Creates a redirect in the database
  * 
@@ -49,4 +51,12 @@ export async function postRedirect(req: Request, db: Database): Promise<Response
         return new Response("Requested path denied. Path exists.", {status: 409})
     }
     return createRedirect(data.link, db, data.requestedCode);
+}
+
+export async function followLink(req: Request, db: Database): Promise<Response> {
+    const code = new URL(req.url).pathname.slice(1);
+    const link = db.query("SELECT link FROM links WHERE code=?").get(code) as dbRow;
+    if(!link || !link.link)
+        return new Response(null, {status: 404});
+    return new Response(null, {headers: {Location: link.link}, status: 302});
 }

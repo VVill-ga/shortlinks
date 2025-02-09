@@ -1,10 +1,9 @@
 import {Database} from "bun:sqlite";
 import { attemptLogin, checkPassword, initAuth } from "./auth";
 import { initCodesFile } from "./codes";
-import { postRedirect } from "./links";
+import { followLink, postRedirect } from "./links";
 const db = new Database("./database/links.db");
 
-type dbRow = {code: string, link: string}
 db.query("CREATE TABLE IF NOT EXISTS links (code TEXT PRIMARY KEY, link TEXT)").run();
 initAuth(db);
 initCodesFile();
@@ -22,11 +21,7 @@ const server = Bun.serve({
         if(file.size) // Invalid paths create a file with size 0
           return new Response(file);
         else{
-          const sqlResult = db.query("SELECT link FROM links WHERE code=?").get(new URL(req.url).pathname.slice(1)) as dbRow;
-          if(sqlResult && sqlResult.link)
-            return new Response(null, {headers: {Location: sqlResult.link}, status: 302});
-          else
-            return new Response(null,  {status: 404});
+          return followLink(req, db);
         }
 
       case "POST":
