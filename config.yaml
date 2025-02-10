@@ -11,6 +11,8 @@ analytics:
   ip: false
   # Collect User Agent on all requests
   useragent: false
+  # Collect Referer URL on all requests
+  referer: false
   ### Cloudflare
   # Make sure to Add visitor location headers, via:
   # https://dash.cloudflare.com/[accountID]/[domain]/rules/transform-rules/managed-transforms

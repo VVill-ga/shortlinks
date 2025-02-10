@@ -12,6 +12,7 @@ type config = {
     enabled: boolean,
     ip: boolean,
     useragent: boolean,
+    referer: boolean,
     cf_ipcountry: boolean,
     cf_ipcity: boolean
   }
@@ -35,6 +36,7 @@ ctx.db.query(`CREATE TABLE IF NOT EXISTS analytics (
   timestamp INTEGER DEFAULT (strftime('%s', 'now')),
   ip TEXT DEFAULT NULL,
   useragent TEXT DEFAULT NULL,
+  referer TEXT DEFAULT NULL,
   cf_ipcountry TEXT DEFAULT NULL,
   cf_ipcity TEXT DEFAULT NULL
   PRIMARY KEY (timestamp, ip)
