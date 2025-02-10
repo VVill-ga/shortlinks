@@ -9,6 +9,7 @@ type config = {
   port: number,
   rootURL: string,
   analytics: {
+    enabled: boolean,
     ip: boolean,
     useragent: boolean,
     cf_ipcountry: boolean,
@@ -28,6 +29,15 @@ ctx.db.query(`CREATE TABLE IF NOT EXISTS links (
   created INTEGER DEFAULT (strftime('%s', 'now')),
   maxVisits INTEGER DEFAULT NULL, 
   expires INTEGER DEFAULT NULL
+)`).run();
+ctx.db.query(`CREATE TABLE IF NOT EXISTS analytics (
+  code TEXT,
+  timestamp INTEGER DEFAULT (strftime('%s', 'now')),
+  ip TEXT DEFAULT NULL,
+  useragent TEXT DEFAULT NULL,
+  cf_ipcountry TEXT DEFAULT NULL,
+  cf_ipcity TEXT DEFAULT NULL
+  PRIMARY KEY (timestamp, ip)
 )`).run();
 initAuth();
 initCodesFile();

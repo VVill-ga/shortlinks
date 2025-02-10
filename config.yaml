@@ -6,6 +6,7 @@ port: 8008
 rootURL: https://a.vvill.dev/
 
 analytics:
+  enabled: false
   # Collect IP address on all requests
   ip: false
   # Collect User Agent on all requests

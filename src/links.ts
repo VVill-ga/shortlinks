@@ -48,7 +48,7 @@ export async function postRedirect(req: Request): Promise<Response> {
         return new Response("Unauthenticated", {status: 401});
     if(!verifyToken(token))
         return new Response("Unautherized", {status: 401});
-    let data;
+    let data: postRedirectBody;
     try{
         data = await req.json() as postRedirectBody;
     } catch(err){
@@ -92,5 +92,18 @@ export async function followLink(req: Request): Promise<Response> {
         return new Response(null, {status: 410});
     }
     ctx.db.query("UPDATE links SET visits=visits+1 WHERE code=?").run(code);
+    if(ctx.config.analytics.enabled){
+        ctx.db.query("INSERT INTO analytics (code, ip, useragent, cf_ipcountry, cf_ipcity) VALUES (?1, ?2, ?3, ?4, ?5)").run(
+            code,
+            ctx.config.analytics.ip? 
+                req.headers.get("x-forwarded-for") || "unknown" : null,
+            ctx.config.analytics.useragent?
+                req.headers.get("User-Agent") || "unknown" : null,
+            ctx.config.analytics.cf_ipcountry? 
+                req.headers.get("CF-IPCountry") || "unknown" : null,
+            ctx.config.analytics.cf_ipcity?
+                req.headers.get("CF-IPCity") || "unknown" : null
+        );
+    }
     return new Response(null, {headers: {Location: link.link}, status: 302});
 }
