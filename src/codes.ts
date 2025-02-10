@@ -1,4 +1,4 @@
-const codesFile = Bun.file("./database/codes.3.txt");
+const codesFile = "./database/codes.3.txt"
 let codes: number[] = []
 
 /**
@@ -32,26 +32,26 @@ function combinationToIndex(combination: string): number {
 function initCodes() {
   codes = Array.from({ length: 26**3 }, (_, i) => i);
   codes.sort(() => Math.random() - 0.5);
-  const writer = codesFile.writer();
+  const writer = Bun.file(codesFile).writer();
   for (const i of codes) {
     const combination = indexToCombination(i);
     writer.write(combination);
   }
-  writer.flush()
+  writer.end()
 }
 
 /**
  * Initialize codes from file
  */
 async function readCodesFromFile() {
-  for(let i = 0; i <= codesFile.size - 1; i += 3) {
-    const str = await codesFile.slice(i, i+3).text()
+  for(let i = 0; i <= Bun.file(codesFile).size - 1; i += 3) {
+    const str = await Bun.file(codesFile).slice(i, i+3).text()
     codes.push(combinationToIndex(str))
   }
 }
 
 export async function initCodesFile() {
-  if(!await codesFile.exists())
+  if(!await Bun.file(codesFile).exists())
     initCodes();
   else
     readCodesFromFile();
@@ -61,11 +61,12 @@ export async function initCodesFile() {
  * Random Shortlink Path Generator
  * @returns String - A random 3 letter code
  */
-export function generateCode(): string {
+export async function generateCode(): Promise<string> {
   const i = codes.shift()
   if(i){
     const code = indexToCombination(i)
-    Bun.write(codesFile, codesFile.slice(3)) //Promise unawaited
+    const text = await Bun.file(codesFile).text()
+    Bun.write(Bun.file(codesFile), text.slice(3))
     return code;
   }
   return ""; //Figure out error case here. DB Full! Out of codes!

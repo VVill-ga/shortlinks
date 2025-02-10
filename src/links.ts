@@ -25,8 +25,8 @@ type postRedirectBody = {
  * 
  * @returns 
  */
-function createRedirect(body: postRedirectBody): Response {
-    let code = body.requestedCode || generateCode();
+async function createRedirect(body: postRedirectBody): Promise<Response> {
+    let code = body.requestedCode || await generateCode();
     ctx.db.query("INSERT INTO links (code, link, maxVisits, expires) VALUES (?1, ?2, ?3, ?4)").run(
         code,
         body.link,
