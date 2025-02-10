@@ -5,10 +5,23 @@ import { attemptLogin, checkPassword, initAuth } from "./auth";
 import { initCodesFile } from "./codes";
 import { followLink, postRedirect } from "./links";
 
-const db = new Database("./database/shortlinks.db");
-const config = yaml.parse(await Bun.file("config.yaml").text());
+type config = {
+  port: number,
+  rootURL: string,
+  analytics: {
+    ip: boolean,
+    useragent: boolean,
+    cf_ipcountry: boolean,
+    cf_ipcity: boolean
+  }
+}
 
-db.query(`CREATE TABLE IF NOT EXISTS links (
+export const ctx = {
+  db: new Database("./database/shortlinks.db"),
+  config: yaml.parse(await Bun.file("config.yaml").text()) as config
+}
+
+ctx.db.query(`CREATE TABLE IF NOT EXISTS links (
   code TEXT PRIMARY KEY, 
   link TEXT, 
   visits INTEGER DEFAULT 0, 
@@ -16,11 +29,11 @@ db.query(`CREATE TABLE IF NOT EXISTS links (
   maxVisits INTEGER DEFAULT NULL, 
   expires INTEGER DEFAULT NULL
 )`).run();
-initAuth(db);
+initAuth();
 initCodesFile();
 
 const server = Bun.serve({
-  port: Number(config.port) || 8008,
+  port: Number(ctx.config.port) || 8008,
   async fetch(req): Promise<Response> {
     switch(req.method){
       case "GET":
@@ -30,18 +43,17 @@ const server = Bun.serve({
         const file = Bun.file(filepath);
         if(file.size) // Invalid paths create a file with size 0
           return new Response(file);
-        else{
-          return followLink(req, db);
-        }
+        else
+          return followLink(req);
 
       case "POST":
         switch(new URL(req.url).pathname){
           case "/checklogin":
-            return await checkPassword(req, db);
+            return await checkPassword(req);
           case "/login":
-            return await attemptLogin(req, db);
+            return await attemptLogin(req);
           case "/":
-            return await postRedirect(req, db);
+            return await postRedirect(req);
           default:
             return new Response("Invalid endpoint", {status: 404});
         }

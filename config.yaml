@@ -13,6 +13,6 @@ analytics:
   ### Cloudflare
   # Make sure to Add visitor location headers, via:
   # https://dash.cloudflare.com/[accountID]/[domain]/rules/transform-rules/managed-transforms
-  cf-ipcountry: false
-  cf-ipcity: false
+  cf_ipcountry: false
+  cf_ipcity: false
   ###

@@ -1,6 +1,6 @@
-import {Database} from "bun:sqlite";
 import { generateCode } from "./codes";
 import { verifyToken } from "./auth";
+import { ctx } from "./index";
 
 type dbRow = {
     code: string,
@@ -11,29 +11,38 @@ type dbRow = {
     expires: number | null
 }
 
+type postRedirectBody = {
+    link: string,
+    requestedCode?: string,
+    maxVisits?: number,
+    expires?: number
+}
+
 /**
  * Creates a redirect in the database
  * 
- * @param {string} link - The link to be redirected to
- * @param {Database} db - The database
- * @param {string} requestedCode - The path to be directed to the link
+ * @param {postRedirectBody} body - Contains info for creating redirect
  * 
  * @returns 
  */
-export function createRedirect(link: string, db: Database, requestedCode?: string): Response {
-  let code = requestedCode || generateCode();
-  db.query("INSERT INTO links (code, link) VALUES (?1, ?2)").run(code, link);
-  return new Response(code, {status: 201});
+function createRedirect(body: postRedirectBody): Response {
+    let code = body.requestedCode || generateCode();
+    ctx.db.query("INSERT INTO links (code, link, maxVisits, expires) VALUES (?1, ?2, ?3, ?4)").run(
+        code,
+        body.link,
+        body.maxVisits || null,
+        body.expires || null
+    );
+    return new Response(ctx.config.rootURL + code, {status: 201});
 }
 
 /**
  * Parses a request to create a redirect
  * 
  * @param req HTTP Request contianing the destination link and requested path
- * @param db Reference to the database
  * @returns HTTP Response
  */
-export async function postRedirect(req: Request, db: Database): Promise<Response> {
+export async function postRedirect(req: Request): Promise<Response> {
     const token = req.headers.get("Authorization")?.split(" ")[1];
     if(!token)
         return new Response("Unauthenticated", {status: 401});
@@ -41,9 +50,9 @@ export async function postRedirect(req: Request, db: Database): Promise<Response
         return new Response("Unautherized", {status: 401});
     let data;
     try{
-        data = await req.json();
+        data = await req.json() as postRedirectBody;
     } catch(err){
-        return new Response("Error parsing JSON body", {status: 400});
+        return new Response("Error parsing body", {status: 400});
     }
     if(!data.link)
         return new Response("Missing destination link", {status: 400});
@@ -53,33 +62,35 @@ export async function postRedirect(req: Request, db: Database): Promise<Response
         return new Response("Requested path denied. Either non alphanumeric characters were used or the length was less than 2.", {status: 409})
         const checkFolder = Bun.file("./public/" + data.requestedCode + "index.html");
         const checkFile = Bun.file("./public/" + data.requestedCode);
-        const checkSQL = db.query("SELECT link FROM links WHERE code=?").get(data.requestedCode);
+        const checkSQL = ctx.db.query("SELECT link FROM links WHERE code=?").get(data.requestedCode);
         if(checkFolder.size || checkFile.size || checkSQL)
-        return new Response("Requested path denied. Path exists.", {status: 409})
+            return new Response("Requested path denied. Path exists.", {status: 409})
     }
-    return createRedirect(data.link, db, data.requestedCode);
+    if(data.maxVisits && data.maxVisits < 1){
+        return new Response("maxVisits must be at least 1", {status: 400});
+    }
+    if(data.expires && data.expires < Date.now()){
+        return new Response("Expires must be a timestamp in the future", {status: 400});
+    }
+    return createRedirect(data);
 }
 
 /**
  * Attempts to follow a redirect in the database
  * 
  * @param req HTTP Request looking for a redirect
- * @param db Database
  * @returns Response, redirects or an error
  */
-export async function followLink(req: Request, db: Database): Promise<Response> {
+export async function followLink(req: Request): Promise<Response> {
     const code = new URL(req.url).pathname.slice(1);
-    const link = db.query("SELECT * FROM links WHERE code=?").get(code) as dbRow;
+    const link = ctx.db.query("SELECT * FROM links WHERE code=?").get(code) as dbRow;
     if(!link || !link.link)
         return new Response(null, {status: 404});
-    if(link.maxVisits && link.visits >= link.maxVisits){
-        db.query("DELETE FROM links WHERE code=?").run(code);
+    if((link.maxVisits && link.visits >= link.maxVisits) || 
+        (link.expires && link.expires < Date.now())){
+        ctx.db.query("DELETE FROM links WHERE code=?").run(code);
         return new Response(null, {status: 410});
     }
-    if(link.expires && link.expires < Date.now()){
-        db.query("DELETE FROM links WHERE code=?").run(code);
-        return new Response(null, {status: 410});
-    }
-    db.query("UPDATE links SET visits=visits+1 WHERE code=?").run(code);
+    ctx.db.query("UPDATE links SET visits=visits+1 WHERE code=?").run(code);
     return new Response(null, {headers: {Location: link.link}, status: 302});
 }
