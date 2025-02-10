@@ -60,10 +60,26 @@ export async function postRedirect(req: Request, db: Database): Promise<Response
     return createRedirect(data.link, db, data.requestedCode);
 }
 
+/**
+ * Attempts to follow a redirect in the database
+ * 
+ * @param req HTTP Request looking for a redirect
+ * @param db Database
+ * @returns Response, redirects or an error
+ */
 export async function followLink(req: Request, db: Database): Promise<Response> {
     const code = new URL(req.url).pathname.slice(1);
-    const link = db.query("SELECT link FROM links WHERE code=?").get(code) as dbRow;
+    const link = db.query("SELECT * FROM links WHERE code=?").get(code) as dbRow;
     if(!link || !link.link)
         return new Response(null, {status: 404});
+    if(link.maxVisits && link.visits >= link.maxVisits){
+        db.query("DELETE FROM links WHERE code=?").run(code);
+        return new Response(null, {status: 410});
+    }
+    if(link.expires && link.expires < Date.now()){
+        db.query("DELETE FROM links WHERE code=?").run(code);
+        return new Response(null, {status: 410});
+    }
+    db.query("UPDATE links SET visits=visits+1 WHERE code=?").run(code);
     return new Response(null, {headers: {Location: link.link}, status: 302});
 }
