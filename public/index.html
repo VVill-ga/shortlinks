@@ -28,7 +28,7 @@
     </style>
     <script>
       function copyLink(e) {
-        let link = window.location.origin + "/" + e.target.getAttribute("code");
+        let link = e.target.getAttribute("link");
         navigator.clipboard.writeText(link);
         window.alert("Copied text: " + link);
       }
@@ -57,7 +57,7 @@
         if(res.status == 201){
           modal.getElementsByTagName("p")[0].innerText = "Redirect created at " + link;
           let button = document.createElement("button");
-          button.setAttribute("code", code);
+          button.setAttribute("link", link);
           button.classList.add("secondary");
           button.innerText = "Copy to Clipboard";
           button.onclick = copyLink;
