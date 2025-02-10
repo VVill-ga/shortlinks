@@ -47,15 +47,14 @@
             'requestedCode': data.get('requestedCode')
           })
         });
-        const code = await res.text();
+        const link = await res.text();
         const modal = document.getElementById("result-modal");
         modal.getElementsByTagName("h3")[0].innerText = "Status " + res.status;
         // Replace copy link button
         let existingLinks = modal.getElementsByTagName("footer")[0].getElementsByClassName("secondary");
         if(existingLinks.length)
           existingLinks[0].remove();
-        if(res.status == 200){
-          let link = window.location.origin + "/" + code;
+        if(res.status == 201){
           modal.getElementsByTagName("p")[0].innerText = "Redirect created at " + link;
           let button = document.createElement("button");
           button.setAttribute("code", code);
@@ -66,7 +65,7 @@
           modal.getElementsByTagName("footer")[0].prepend(button);
         }
         else
-          modal.getElementsByTagName("p")[0].innerText = "Error creating redirect: "+code;
+          modal.getElementsByTagName("p")[0].innerText = "Error creating redirect: "+link;
         openModal(modal);
       }
     </script>
