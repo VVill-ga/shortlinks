@@ -31,6 +31,7 @@ ctx.db.query(`CREATE TABLE IF NOT EXISTS links (
   maxVisits INTEGER DEFAULT NULL, 
   expires INTEGER DEFAULT NULL
 )`).run();
+
 ctx.db.query(`CREATE TABLE IF NOT EXISTS analytics (
   code TEXT,
   timestamp INTEGER DEFAULT (strftime('%s', 'now')),
@@ -38,7 +39,7 @@ ctx.db.query(`CREATE TABLE IF NOT EXISTS analytics (
   useragent TEXT DEFAULT NULL,
   referer TEXT DEFAULT NULL,
   cf_ipcountry TEXT DEFAULT NULL,
-  cf_ipcity TEXT DEFAULT NULL
+  cf_ipcity TEXT DEFAULT NULL,
   PRIMARY KEY (timestamp, ip)
 )`).run();
 initAuth();

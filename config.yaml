@@ -6,16 +6,16 @@ port: 8008
 rootURL: https://a.vvill.dev/
 
 analytics:
-  enabled: false
+  enabled: true
   # Collect IP address on all requests
-  ip: false
+  ip: true
   # Collect User Agent on all requests
-  useragent: false
+  useragent: true
   # Collect Referer URL on all requests
-  referer: false
+  referer: true
   ### Cloudflare
   # Make sure to Add visitor location headers, via:
   # https://dash.cloudflare.com/[accountID]/[domain]/rules/transform-rules/managed-transforms
-  cf_ipcountry: false
-  cf_ipcity: false
+  cf_ipcountry: true
+  cf_ipcity: true
   ###

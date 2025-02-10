@@ -96,12 +96,12 @@ export async function followLink(req: Request): Promise<Response> {
         ctx.db.query("INSERT INTO analytics (code, ip, useragent, referer, cf_ipcountry, cf_ipcity) VALUES (?1, ?2, ?3, ?4, ?5, ?6)").run(
             code,
             ctx.config.analytics.ip? 
-                req.headers.get("x-forwarded-for") || "unknown" : null,
+                req.headers.get("X-Forwarded-For") || req.headers.get("X-Real-IP") || "unknown" : null,
             ctx.config.analytics.useragent?
                 req.headers.get("User-Agent") || "unknown" : null,
             ctx.config.analytics.referer?
-                req.headers.get("Referer") || "unknown" : null,
-            ctx.config.analytics.cf_ipcountry? 
+                req.referrer || "unknown" : null,
+            ctx.config.analytics.cf_ipcountry?
                 req.headers.get("CF-IPCountry") || "unknown" : null,
             ctx.config.analytics.cf_ipcity?
                 req.headers.get("CF-IPCity") || "unknown" : null
