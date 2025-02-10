@@ -1,16 +1,19 @@
+import yaml from "yaml";
 import {Database} from "bun:sqlite";
+
 import { attemptLogin, checkPassword, initAuth } from "./auth";
 import { initCodesFile } from "./codes";
 import { followLink, postRedirect } from "./links";
+
 const db = new Database("./database/links.db");
+const config = yaml.parse(await Bun.file("config.yaml").text());
 
 db.query("CREATE TABLE IF NOT EXISTS links (code TEXT PRIMARY KEY, link TEXT)").run();
 initAuth(db);
 initCodesFile();
 
-
 const server = Bun.serve({
-  port: Number(process.env.SHORTLINKS_PORT) || 8008,
+  port: Number(config.port) || 8008,
   async fetch(req): Promise<Response> {
     switch(req.method){
       case "GET":

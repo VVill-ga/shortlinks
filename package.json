@@ -3,12 +3,13 @@
   "module": "src/index.ts",
   "type": "module",
   "scripts": {
-    "clean": "rm database/links.db",
+    "clean": "rm database/*",
     "host": "bun src/index.ts"
   },
   "dependencies": {
     "@types/qrcode": "^1.5.5",
+    "otpauth": "^9.3.6",
     "qrcode": "^1.5.4",
-    "otpauth": "^9.3.6"
+    "yaml": "^2.7.0"
   }
 }

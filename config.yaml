@@ -1,0 +1,18 @@
+# Port to listen on
+port: 8008
+
+# Root URL for returned shortlinks
+# Be sure to include protocol and trailing slash
+rootURL: https://a.vvill.dev/
+
+analytics:
+  # Collect IP address on all requests
+  ip: false
+  # Collect User Agent on all requests
+  useragent: false
+  ### Cloudflare
+  # Make sure to Add visitor location headers, via:
+  # https://dash.cloudflare.com/[accountID]/[domain]/rules/transform-rules/managed-transforms
+  cf-ipcountry: false
+  cf-ipcity: false
+  ###
