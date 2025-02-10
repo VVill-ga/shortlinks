@@ -5,10 +5,17 @@ import { attemptLogin, checkPassword, initAuth } from "./auth";
 import { initCodesFile } from "./codes";
 import { followLink, postRedirect } from "./links";
 
-const db = new Database("./database/links.db");
+const db = new Database("./database/shortlinks.db");
 const config = yaml.parse(await Bun.file("config.yaml").text());
 
-db.query("CREATE TABLE IF NOT EXISTS links (code TEXT PRIMARY KEY, link TEXT)").run();
+db.query(`CREATE TABLE IF NOT EXISTS links (
+  code TEXT PRIMARY KEY, 
+  link TEXT, 
+  visits INTEGER DEFAULT 0, 
+  created INTEGER DEFAULT (strftime('%s', 'now')),
+  maxVisits INTEGER DEFAULT NULL, 
+  expires INTEGER DEFAULT NULL
+)`).run();
 initAuth(db);
 initCodesFile();
 

@@ -2,7 +2,14 @@ import {Database} from "bun:sqlite";
 import { generateCode } from "./codes";
 import { verifyToken } from "./auth";
 
-type dbRow = {code: string, link: string}
+type dbRow = {
+    code: string,
+    link: string,
+    visits: number,
+    created: number,
+    maxVisits: number | null,
+    expires: number | null
+}
 
 /**
  * Creates a redirect in the database

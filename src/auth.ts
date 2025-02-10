@@ -20,7 +20,12 @@ type User = {
  * @returns null
  */
 export function initAuth(db: Database){
-    db.query("CREATE TABLE IF NOT EXISTS users (name TEXT PRIMARY KEY, password TEXT, secret TEXT, admin BOOLEAN)").run();
+    db.query(`CREATE TABLE IF NOT EXISTS users (
+        name TEXT PRIMARY KEY,
+        password TEXT,
+        secret TEXT,
+        admin BOOLEAN
+    )`).run();
 
     // Create an admin user if there are no users
     const users = db.query("SELECT 1 FROM users").get();
