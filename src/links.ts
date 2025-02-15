@@ -18,6 +18,13 @@ type postRedirectBody = {
     expires?: number
 }
 
+// Paths that are served as part of the web interface
+const reservedPaths = [
+    "login",
+    "manage",
+    "accounts",
+]
+
 /**
  * Creates a redirect in the database
  * 
@@ -44,9 +51,9 @@ async function createRedirect(body: postRedirectBody): Promise<Response> {
  */
 export async function postRedirect(req: Request): Promise<Response> {
     const token = req.headers.get("Authorization")?.split(" ")[1];
-    if(!token)
+    if(ctx.config.requireLogin && !token)
         return new Response("Unauthenticated", {status: 401});
-    if(!verifyToken(token))
+    if(ctx.config.requireLogin && token && !verifyToken(token))
         return new Response("Unautherized", {status: 401});
     let data: postRedirectBody;
     try{
@@ -59,11 +66,9 @@ export async function postRedirect(req: Request): Promise<Response> {
     if(data.requestedCode){
         console.log("Recieved request for : ", data.requestedCode)
         if(!data.requestedCode.match(/^([0-9]|[a-z])+([0-9a-z]+)$/i))
-        return new Response("Requested path denied. Either non alphanumeric characters were used or the length was less than 2.", {status: 409})
-        const checkFolder = Bun.file("./public/" + data.requestedCode + "index.html");
-        const checkFile = Bun.file("./public/" + data.requestedCode);
+            return new Response("Requested path denied. Either non alphanumeric characters were used or the length was less than 2.", {status: 409})
         const checkSQL = ctx.db.query("SELECT link FROM links WHERE code=?").get(data.requestedCode);
-        if(checkFolder.size || checkFile.size || checkSQL)
+        if(checkSQL || reservedPaths.includes(data.requestedCode))
             return new Response("Requested path denied. Path exists.", {status: 409})
     }
     if(data.maxVisits && data.maxVisits < 1){
@@ -81,11 +86,11 @@ export async function postRedirect(req: Request): Promise<Response> {
  * @param req HTTP Request looking for a redirect
  * @returns Response, redirects or an error
  */
-export async function followLink(req: Request): Promise<Response> {
+export function followLink(req: Request): Response | null {
     const code = new URL(req.url).pathname.slice(1);
     const link = ctx.db.query("SELECT * FROM links WHERE code=?").get(code) as dbRow;
     if(!link || !link.link)
-        return new Response(null, {status: 404});
+        null
     if((link.maxVisits && link.visits >= link.maxVisits) || 
         (link.expires && link.expires < Date.now())){
         ctx.db.query("DELETE FROM links WHERE code=?").run(code);
@@ -93,7 +98,9 @@ export async function followLink(req: Request): Promise<Response> {
     }
     ctx.db.query("UPDATE links SET visits=visits+1 WHERE code=?").run(code);
     if(ctx.config.analytics.enabled){
-        ctx.db.query("INSERT INTO analytics (code, ip, useragent, referer, cf_ipcountry, cf_ipcity) VALUES (?1, ?2, ?3, ?4, ?5, ?6)").run(
+        ctx.db.query(`INSERT INTO analytics 
+            (code, ip, useragent, referer, cf_ipcountry, cf_ipcity)
+            VALUES (?1, ?2, ?3, ?4, ?5, ?6)`).run(
             code,
             ctx.config.analytics.ip? 
                 req.headers.get("X-Forwarded-For") || req.headers.get("X-Real-IP") || "unknown" : null,

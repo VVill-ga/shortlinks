@@ -5,7 +5,11 @@ port: 8008
 # Be sure to include protocol and trailing slash
 rootURL: https://a.vvill.dev/
 
+# Disable this if you want anyone to be able to create shortlinks
+requireLogin: true
+
 analytics:
+  # Use this to quickly disable all analytics
   enabled: true
   # Collect IP address on all requests
   ip: true
