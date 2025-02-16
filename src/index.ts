@@ -24,6 +24,19 @@ export const ctx = {
     config: yaml.parse(await Bun.file("config.yaml").text()) as config
 }
 
+const authRequired = [
+    "/", "/index.html",
+    "/manage", "/manage/index.html",
+    "/x/tabs.html",
+    "/x/home.html",
+    "/x/manage.html",
+    "/x/links.html",
+]
+const adminRequired = [
+    "/accounts", "/accounts/index.html",
+    "/x/accounts.html",
+]
+
 ctx.db.query(`CREATE TABLE IF NOT EXISTS links (
     code TEXT PRIMARY KEY, 
     link TEXT, 
@@ -49,34 +62,42 @@ initCodesFile();
 const server = Bun.serve({
     port: Number(ctx.config.port) || 8008,
     async fetch(req): Promise<Response> {
+        let path = new URL(req.url).pathname;
         switch(req.method){
             case "GET":
-                // Publicly Available
-                switch(new URL(req.url).pathname){
-                    case "/favicon.ico":
-                        return new Response(Bun.file("./public/favicon.ico"));
-                    case "/favicon.svg":
-                        return new Response(Bun.file("./public/favicon.svg"));
-                    case "/modal.js":
-                        return new Response(Bun.file("./public/modal.js"));
-                    case "/login":
-                        return new Response(Bun.file("./public/login.html"));
-                    default:
-                        let redirect = followLink(req);
-                        if(redirect != null) return redirect;
+                // Static file hosting. Omitting paths that require auth if requireLogin is set
+                if(!authRequired.includes(path) && !adminRequired.includes(path) ||
+                (authRequired.includes(path) && !ctx.config.requireLogin)){
+                    let file = Bun.file("./public" + path);
+                    let index = Bun.file("./public" + path + "/index.html");
+                    if(await file.exists()) return new Response(file);
+                    if(await index.exists()) return new Response(index);
+                    let redirect = followLink(req);
+                    if(redirect != null) return redirect;
+                    return new Response(Bun.file("./public/404.html"), {status: 404});
                 }
                 // Everything else requires Auth if logins are required
                 if(ctx.config.requireLogin && (!req.headers.get("Authorization") || !verifyToken(req.headers.get("Authorization")?.split(" ")[1] || "")))
-                    return new Response(null, {headers: {Location: "/login"}, status: 302});
+                    return new Response(null, {headers: {Location: "/login.html"}, status: 302});
                 // Auth'd paths
                 switch(new URL(req.url).pathname){
-                    case "/":
-                        return new Response(Bun.file("./public/index.html"));
+                    // Define paths that require dynamic content
+                    case "/inner/tabs":
+                    case "/inner/home":
+                    case "/inner/manage":
+                    case "/inner/accounts":
+                    case "/inner/links":
+                    default:
+                        let file = Bun.file("./public" + path);
+                        let index = Bun.file("./public" + path + "/index.html");
+                        if(await file.exists()) return new Response(file);
+                        if(await index.exists()) return new Response(index);
+
                 }
                 return new Response(Bun.file("./public/404.html"), {status: 404});
 
             case "POST":
-                switch(new URL(req.url).pathname){
+                switch(path){
                     case "/checklogin":
                         return await checkPassword(req);
                     case "/login":
