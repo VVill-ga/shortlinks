@@ -2,11 +2,14 @@
 port: 8008
 
 # Root URL for returned shortlinks
-# Be sure to include protocol and trailing slash
-rootURL: https://a.vvill.dev/
+# Be sure to omit protocol and trailing slash
+domain: a.vvill.dev
 
 # Require users to login before creating shortlinks
 requireLogin: true
+
+# Lifetime of a session token in seconds (Default 24h)
+sessionLifetime: 86400
 
 analytics:
   # Use this to quickly disable all analytics

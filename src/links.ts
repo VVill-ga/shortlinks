@@ -1,5 +1,5 @@
 import { generateCode } from "./codes";
-import { verifyToken } from "./auth";
+import { isAuthenticated } from "./auth";
 import { ctx } from "./index";
 
 type dbRow = {
@@ -40,7 +40,7 @@ async function createRedirect(body: postRedirectBody): Promise<Response> {
         body.maxVisits || null,
         body.expires || null
     );
-    return new Response(ctx.config.rootURL + code, {status: 201});
+    return new Response("https://" + ctx.config.domain + "/" + code, {status: 201});
 }
 
 /**
@@ -50,11 +50,8 @@ async function createRedirect(body: postRedirectBody): Promise<Response> {
  * @returns HTTP Response
  */
 export async function postRedirect(req: Request): Promise<Response> {
-    const token = req.headers.get("Authorization")?.split(" ")[1];
-    if(ctx.config.requireLogin && !token)
+    if(ctx.config.requireLogin && !isAuthenticated(req))
         return new Response("Unauthenticated", {status: 401});
-    if(ctx.config.requireLogin && token && !verifyToken(token))
-        return new Response("Unautherized", {status: 401});
     let data: postRedirectBody;
     try{
         data = await req.json() as postRedirectBody;

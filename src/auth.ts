@@ -102,7 +102,14 @@ export async function attemptLogin(req: Request){
     const token = loginUser(data.username, data.password, data.otp);
     if(!token)
         return new Response("Invalid username, password, or OTP", {status: 401});
-    return new Response(token, {status: 200});
+    let headers = new Headers(req.headers);
+    headers.append("Set-Cookie", `token=${token}; 
+        Path=/; SameSite=strict; HttpOnly; Secure; 
+        Max-Age=${ctx.config.sessionLifetime}; Domain=${ctx.config.domain}`);
+    headers.append("Set-Cookie", `username=${data.username}; 
+        Path=/; SameSite=strict; HttpOnly; Secure; 
+        Max-Age=${ctx.config.sessionLifetime}; Domain=${ctx.config.domain}`);
+    return new Response(null, {status: 200, headers});
 }
 
 /**
@@ -126,6 +133,12 @@ export function loginUser(name: string, password: string, otp: string){
     return createToken(name);
 }
 
+export function isAuthenticated(req: Request){
+    const cookies = parseCookies(req.headers.get("cookie"));
+    if(!cookies.token) return false;
+    return verifyToken(cookies.token);
+}
+
 /**
  * Creates a session token, expires in 24 hours
  * @param name User name to create token for
@@ -134,8 +147,7 @@ export function loginUser(name: string, password: string, otp: string){
 function createToken(name: string): string{
     const token = crypto.randomUUID();
     const expires = new Date();
-    // Tokens last 24 hours
-    expires.setHours(expires.getHours() + 24);
+    expires.setSeconds(expires.getSeconds() + ctx.config.sessionLifetime);
     tokens.push({name, token, expires});
     return token as string;
 }
@@ -145,7 +157,7 @@ function createToken(name: string): string{
  * @param token Session token
  * @returns Validity of the token
  */
-export function verifyToken(token: string){
+function verifyToken(token: string){
     const tokenData = tokens.find(t => t.token === token);
     if(!tokenData) return false;
     if(tokenData.expires < new Date()){
@@ -159,7 +171,7 @@ export function verifyToken(token: string){
  * Removes a session token
  * @param token Session token
  */
-export function removeToken(token: string){
+function removeToken(token: string){
     tokens = tokens.filter(t => t.token !== token);
 }
 
@@ -169,4 +181,15 @@ export function removeToken(token: string){
  */
 export function logoutUser(name: string){
     tokens = tokens.filter(t => t.name !== name);
+}
+
+// Helper function to parse cookies
+function parseCookies(cookieHeader?: string | null): Record<string, string> {
+  if (!cookieHeader) return {};
+  return Object.fromEntries(
+    cookieHeader.split("; ").map((c) => {
+      const [key, value] = c.split("=");
+      return [key, decodeURIComponent(value)];
+    })
+  );
 }

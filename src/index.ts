@@ -1,14 +1,15 @@
 import yaml from "yaml";
 import {Database} from "bun:sqlite";
 
-import { attemptLogin, checkPassword, initAuth, verifyToken } from "./auth";
+import { attemptLogin, checkPassword, initAuth, isAuthenticated } from "./auth";
 import { initCodesFile } from "./codes";
 import { followLink, postRedirect } from "./links";
 
 type config = {
     port: number,
-    rootURL: string,
+    domain: string,
     requireLogin: boolean,
+    sessionLifetime: number,
     analytics: {
         enabled: boolean,
         ip: boolean,
@@ -77,8 +78,11 @@ const server = Bun.serve({
                     return new Response(Bun.file("./public/404.html"), {status: 404});
                 }
                 // Everything else requires Auth if logins are required
-                if(ctx.config.requireLogin && (!req.headers.get("Authorization") || !verifyToken(req.headers.get("Authorization")?.split(" ")[1] || "")))
-                    return new Response(null, {headers: {Location: "/login.html"}, status: 302});
+                if(ctx.config.requireLogin && !isAuthenticated(req)) {
+                    if(authRequired.includes(path))
+                        return new Response(null, {headers: {Location: "/login.html"}, status: 302});
+                    return new Response(null, {status: 401});
+                }
                 // Auth'd paths
                 switch(new URL(req.url).pathname){
                     // Define paths that require dynamic content
