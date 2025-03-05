@@ -1,0 +1,22 @@
+<h1>Shortlinks Web Frontend</h1>
+<nav>
+    <style>
+        .tab a {
+            text-decoration: none;
+            color: inherit;
+        }
+    </style>
+    <ul>
+        <li class="tab" aria-controls="html">
+            <a href="/">Create</a></li>
+        <li class="tab" aria-controls="page"><a href="/links">Manage</a></li>
+        <li class="tab" aria-controls="page"><a href="/accounts">Accounts</a></li>
+    </ul>
+    <ul>
+        <li class="tab"
+            hx-post="/logout"
+            aria-controls="page">
+            <a href="/login.html">Logout</a></li>
+    </ul>
+</nav>
+<hr style="margin: 0 0 1rem"/>

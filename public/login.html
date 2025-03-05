@@ -39,11 +39,11 @@
                     body: JSON.stringify({ username, password, otp })
                 }).then(response => {
                     if (response.ok) {
-                        localStorage.setItem("username", username);
-                        localStorage.setItem("token", response.headers.get("Authorization").split(" ")[1]);
                         window.location.href = "/";
                     } else {
-                        alert("Invalid username or password");
+                        response.text().then(text => {
+                            alert(text);
+                        })
                     }
                 });
             }

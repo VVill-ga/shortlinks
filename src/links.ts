@@ -113,3 +113,9 @@ export function followLink(req: Request): Response | null {
     }
     return new Response(null, {headers: {Location: link.link}, status: 302});
 }
+
+export function getAllLinks(isAdmin): dbRow[] {
+    if(isAdmin)
+        return ctx.db.query("SELECT * FROM links ORDER BY created DESC").all() as dbRow[];
+    return []
+}

@@ -11,6 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
     <script src="modal.js"></script>
     <style>
       :root {
@@ -22,81 +23,12 @@
         flex-direction: column;
         justify-content: center;
       }
-      .hero *:not(.hero * *){
-        margin: auto 1rem;
-      }
     </style>
-    <script>
-      function copyLink(e) {
-        let link = e.target.getAttribute("link");
-        navigator.clipboard.writeText(link);
-        window.alert("Copied text: " + link);
-      }
-      async function submitLink(e) {
-        e.preventDefault();
-        const data = new FormData(event.target);
-        const res = await fetch("/", {
-          method: "post",
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + localStorage.getItem("token")
-          },
-          body: JSON.stringify({
-            'link': data.get('link'),
-            'requestedCode': data.get('requestedCode')
-          })
-        });
-        const link = await res.text();
-        const modal = document.getElementById("result-modal");
-        modal.getElementsByTagName("h3")[0].innerText = "Status " + res.status;
-        // Replace copy link button
-        let existingLinks = modal.getElementsByTagName("footer")[0].getElementsByClassName("secondary");
-        if(existingLinks.length)
-          existingLinks[0].remove();
-        if(res.status == 201){
-          modal.getElementsByTagName("p")[0].innerText = "Redirect created at " + link;
-          let button = document.createElement("button");
-          button.setAttribute("link", link);
-          button.classList.add("secondary");
-          button.innerText = "Copy to Clipboard";
-          button.onclick = copyLink;
-
-          modal.getElementsByTagName("footer")[0].prepend(button);
-        }
-        else
-          modal.getElementsByTagName("p")[0].innerText = "Error creating redirect: "+link;
-        openModal(modal);
-      }
-    </script>
   </head>
   <body>
-    <main class="hero container">
-      <form onsubmit="submitLink(event)">
-        <h1>Shortlinks Web Frontend</h1>
-        <hr />
-        <p>Shortlinks is an Open Source self-hostable webserver and REST API 
-          for creating and following URL redirects. For more information or to
-          host your own, visit the 
-          <a href="https://github.com/VVill-ga/shortlinks">Github</a>.
-          There is also 
-          <a href="https://github.com/VVill-ga/shortlinks-cli">Shortlinks CLI
-          </a>, a terminal based interface for creating shortlinks written in 
-          Go.
-        </p>
-        <br />
-        <label for="link">Long Link</label>
-        <input type="text" placeholder="https://randomsubdomain.superlonglinks.com/random_id_code/another_random_id?seemingly=unimportant&unnecessarily_long=true#important" name="link" />
-        <article>
-          <details style="margin:0;">
-            <summary>More Options</summary>
-            <label for="requestedCode">Short Path</label>
-            <input type="text" placeholder="SuperCoolLink" name="requestedCode" />
-          </details>
-        </article>
-        <input type="submit" value="Create Shortlink" />
-      </form>
-    </main>
+    <main id="page" class="hero container" hx-target="this" hx-swap="innerHTML"></main>
+
+    <!-- Modals -->
     <dialog id="result-modal">
       <article>
         <header>

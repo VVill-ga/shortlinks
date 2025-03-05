@@ -1,0 +1,67 @@
+<script>
+    function copyLink(e) {
+        let link = e.target.getAttribute("link");
+        navigator.clipboard.writeText(link);
+        window.alert("Copied text: " + link);
+    }
+    async function submitLink(e) {
+        e.preventDefault();
+        const data = new FormData(event.target);
+        const res = await fetch("/", {
+            method: "post",
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem("token")
+            },
+            body: JSON.stringify({
+                'link': data.get('link'),
+                'requestedCode': data.get('requestedCode')
+            })
+        });
+        const link = await res.text();
+        const modal = document.getElementById("result-modal");
+        modal.getElementsByTagName("h3")[0].innerText = "Status " + res.status;
+        // Replace copy link button
+        let existingLinks = modal.getElementsByTagName("footer")[0].getElementsByClassName("secondary");
+        if (existingLinks.length)
+            existingLinks[0].remove();
+        if (res.status == 201) {
+            modal.getElementsByTagName("p")[0].innerText = "Redirect created at " + link;
+            let button = document.createElement("button");
+            button.setAttribute("link", link);
+            button.classList.add("secondary");
+            button.innerText = "Copy to Clipboard";
+            button.onclick = copyLink;
+
+            modal.getElementsByTagName("footer")[0].prepend(button);
+        }
+        else
+            modal.getElementsByTagName("p")[0].innerText = "Error creating redirect: " + link;
+        openModal(modal);
+    }
+</script>
+<form onsubmit="submitLink(event)">
+    <p>Shortlinks is an Open Source self-hostable webserver and REST API
+        for creating and following URL redirects. For more information or to
+        host your own, visit the
+        <a href="https://github.com/VVill-ga/shortlinks">Github</a>.
+        There is also
+        <a href="https://github.com/VVill-ga/shortlinks-cli">Shortlinks CLI
+        </a>, a terminal based interface for creating shortlinks written in
+        Go.
+    </p>
+    <br />
+    <label for="link">Long Link</label>
+    <input type="text"
+        placeholder="https://randomsubdomain.superlonglinks.com/random_id_code/another_random_id?seemingly=unimportant&unnecessarily_long=true#important"
+        name="link" />
+    <article>
+        <details style="margin:0;">
+            <summary>More Options</summary>
+            <label for="requestedCode">Short Path</label>
+            <input type="text" placeholder="SuperCoolLink" name="requestedCode" />
+        </details>
+    </article>
+    <input type="submit" value="Create Shortlink" />
+</form>

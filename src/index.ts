@@ -1,9 +1,10 @@
 import yaml from "yaml";
 import {Database} from "bun:sqlite";
 
-import { attemptLogin, checkPassword, initAuth, isAuthenticated } from "./auth";
+import { attemptLogin, checkPassword, initAuth, isAdmin, isAuthenticated, logoutUser } from "./auth";
 import { initCodesFile } from "./codes";
 import { followLink, postRedirect } from "./links";
+import routes from "./htmx";
 
 type config = {
     port: number,
@@ -27,10 +28,8 @@ export const ctx = {
 
 const authRequired = [
     "/", "/index.html",
-    "/manage", "/manage/index.html",
-    "/x/tabs.html",
-    "/x/home.html",
-    "/x/manage.html",
+    "/x/index.html",
+    "/links", "/links/index.html",
     "/x/links.html",
 ]
 const adminRequired = [
@@ -67,8 +66,7 @@ const server = Bun.serve({
         switch(req.method){
             case "GET":
                 // Static file hosting. Omitting paths that require auth if requireLogin is set
-                if(!authRequired.includes(path) && !adminRequired.includes(path) ||
-                (authRequired.includes(path) && !ctx.config.requireLogin)){
+                if(!authRequired.includes(path) && !adminRequired.includes(path)) {
                     let file = Bun.file("./public" + path);
                     let index = Bun.file("./public" + path + "/index.html");
                     if(await file.exists()) return new Response(file);
@@ -78,25 +76,31 @@ const server = Bun.serve({
                     return new Response(Bun.file("./public/404.html"), {status: 404});
                 }
                 // Everything else requires Auth if logins are required
-                if(ctx.config.requireLogin && !isAuthenticated(req)) {
+                if(ctx.config.requireLogin && !isAuthenticated(req)){
                     if(authRequired.includes(path))
                         return new Response(null, {headers: {Location: "/login.html"}, status: 302});
-                    return new Response(null, {status: 401});
+                    return new Response("Authentication required", {status: 401});
+                }
+                if(adminRequired.includes(path) && !isAdmin(isAuthenticated(req) || "")){
+                    return new Response("This page requires admin access", {status: 401});
                 }
                 // Auth'd paths
                 switch(new URL(req.url).pathname){
                     // Define paths that require dynamic content
-                    case "/inner/tabs":
-                    case "/inner/home":
-                    case "/inner/manage":
-                    case "/inner/accounts":
-                    case "/inner/links":
+                    case "/":
+                    case "/index.html":
+                        return new Response(routes.index(req), {headers: { "Content-Type": "text/html" }});
+                    case "/links":
+                    case "/links/index.html":
+                        return new Response(routes.links(req), {headers: { "Content-Type": "text/html" }});
+                    case "/accounts":
+                    case "/accounts/index.html":
+                        return new Response(routes.accounts(req), {headers: { "Content-Type": "text/html" }});
                     default:
                         let file = Bun.file("./public" + path);
                         let index = Bun.file("./public" + path + "/index.html");
                         if(await file.exists()) return new Response(file);
                         if(await index.exists()) return new Response(index);
-
                 }
                 return new Response(Bun.file("./public/404.html"), {status: 404});
 
@@ -106,6 +110,9 @@ const server = Bun.serve({
                         return await checkPassword(req);
                     case "/login":
                         return await attemptLogin(req);
+                    case "/logout":
+                        logoutUser(isAuthenticated(req) || "");
+                        return new Response(null, {status: 200});
                     case "/":
                         return await postRedirect(req);
                     default:

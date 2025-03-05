@@ -3,7 +3,7 @@ port: 8008
 
 # Root URL for returned shortlinks
 # Be sure to omit protocol and trailing slash
-domain: a.vvill.dev
+domain: localhost:8008
 
 # Require users to login before creating shortlinks
 requireLogin: true

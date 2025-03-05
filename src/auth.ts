@@ -103,12 +103,20 @@ export async function attemptLogin(req: Request){
     if(!token)
         return new Response("Invalid username, password, or OTP", {status: 401});
     let headers = new Headers(req.headers);
+    /** Commented out while working localhost
     headers.append("Set-Cookie", `token=${token}; 
         Path=/; SameSite=strict; HttpOnly; Secure; 
-        Max-Age=${ctx.config.sessionLifetime}; Domain=${ctx.config.domain}`);
+        Max-Age=${ctx.config.sessionLifetime}; Domain=${ctx.config.domain}`.replace(/\s/g, ""));
     headers.append("Set-Cookie", `username=${data.username}; 
         Path=/; SameSite=strict; HttpOnly; Secure; 
-        Max-Age=${ctx.config.sessionLifetime}; Domain=${ctx.config.domain}`);
+        Max-Age=${ctx.config.sessionLifetime}; Domain=${ctx.config.domain}`.replace(/\s/g, ""));
+    */
+    headers.append("Set-Cookie", `token=${token}; 
+        Path=/; SameSite=strict; HttpOnly; Secure; 
+        Max-Age=${ctx.config.sessionLifetime};`.replace(/\s/g, ""));
+    headers.append("Set-Cookie", `username=${data.username}; 
+        Path=/; SameSite=strict; HttpOnly; Secure; 
+        Max-Age=${ctx.config.sessionLifetime};`.replace(/\s/g, ""));
     return new Response(null, {status: 200, headers});
 }
 
@@ -133,10 +141,26 @@ export function loginUser(name: string, password: string, otp: string){
     return createToken(name);
 }
 
+/**
+ * Checks for auth token
+ * @param req HTTP Request
+ * @returns false if not authenticated, username if so
+ */
 export function isAuthenticated(req: Request){
     const cookies = parseCookies(req.headers.get("cookie"));
     if(!cookies.token) return false;
     return verifyToken(cookies.token);
+}
+
+/**
+ * Checks if user is admin
+ * @param username User name
+ * @returns true if admin, false if not
+ */
+export function isAdmin(username: string){
+    const user = ctx.db.query("SELECT * FROM users WHERE name=?").get(username) as User;
+    if(!user) return false;
+    return user.admin;
 }
 
 /**
