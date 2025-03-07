@@ -7,13 +7,14 @@
         }
     </style>
     <ul>
-        <li class="tab" aria-controls="html">
+        <li id="index" class="tab" aria-controls="page">
             <a href="/">Create</a></li>
-        <li class="tab" aria-controls="page"><a href="/links">Manage</a></li>
-        <li class="tab" aria-controls="page"><a href="/accounts">Accounts</a></li>
+        <li id="links" class="tab" aria-controls="page"><a href="/links">Manage</a></li>
+        <li id="accounts" class="tab" aria-controls="page"><a href="/accounts">Accounts</a></li>
     </ul>
     <ul>
         <li class="tab"
+            id="logout"
             hx-post="/logout"
             aria-controls="page">
             <a href="/login.html">Logout</a></li>
