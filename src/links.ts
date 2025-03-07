@@ -1,14 +1,15 @@
 import { generateCode } from "./codes";
-import { isAuthenticated } from "./auth";
+import { isAdmin, isAuthenticated } from "./auth";
 import { ctx } from "./index";
 
 type dbRow = {
     code: string,
     link: string,
-    visits: number,
+    creator: string,
     created: number,
-    maxVisits: number | null,
-    expires: number | null
+    expires: number | null,
+    visits: number,
+    maxVisits: number | null
 }
 
 type postRedirectBody = {
@@ -32,11 +33,12 @@ const reservedPaths = [
  * 
  * @returns 
  */
-async function createRedirect(body: postRedirectBody): Promise<Response> {
+async function createRedirect(req: Request, body: postRedirectBody): Promise<Response> {
     let code = body.requestedCode || await generateCode();
-    ctx.db.query("INSERT INTO links (code, link, maxVisits, expires) VALUES (?1, ?2, ?3, ?4)").run(
+    ctx.db.query("INSERT INTO links (code, link, creator, maxVisits, expires) VALUES (?1, ?2, ?3, ?4, ?5)").run(
         code,
         body.link,
+        ctx.config.requireLogin ? isAuthenticated(req) || "" : "",
         body.maxVisits || null,
         body.expires || null
     );
@@ -74,7 +76,7 @@ export async function postRedirect(req: Request): Promise<Response> {
     if(data.expires && data.expires < Date.now()){
         return new Response("Expires must be a timestamp in the future", {status: 400});
     }
-    return createRedirect(data);
+    return createRedirect(req, data);
 }
 
 /**
@@ -114,8 +116,14 @@ export function followLink(req: Request): Response | null {
     return new Response(null, {headers: {Location: link.link}, status: 302});
 }
 
-export function getAllLinks(isAdmin): dbRow[] {
-    if(isAdmin)
-        return ctx.db.query("SELECT * FROM links ORDER BY created DESC").all() as dbRow[];
-    return []
+export function getLinks(user: string, page: number): dbRow[] {
+    if(isAdmin(user))
+        return ctx.db.query("SELECT * FROM links ORDER BY created DESC LIMIT ?1 OFFSET ?2").all(10, page * 10) as dbRow[];
+    return ctx.db.query("SELECT * FROM links WHERE creator=? ORDER BY created DESC LIMIT ?1 OFFSET ?2").all(10, page * 10, user) as dbRow[];
+}
+
+export function getCount(user: string): number {
+    if(isAdmin(user))
+        return ctx.db.query("SELECT COUNT(*) FROM links").get() as number;
+    return ctx.db.query("SELECT COUNT(*) FROM links WHERE creator=?").get(user) as number;
 }

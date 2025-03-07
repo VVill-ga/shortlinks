@@ -149,7 +149,10 @@ export function loginUser(name: string, password: string, otp: string){
 export function isAuthenticated(req: Request){
     const cookies = parseCookies(req.headers.get("cookie"));
     if(!cookies.token) return false;
-    return verifyToken(cookies.token);
+    const username = verifyToken(cookies.token);
+    // Someday we'll have error handling...
+    if(cookies.username != username) return false;
+    return username
 }
 
 /**

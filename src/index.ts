@@ -40,10 +40,11 @@ const adminRequired = [
 ctx.db.query(`CREATE TABLE IF NOT EXISTS links (
     code TEXT PRIMARY KEY, 
     link TEXT, 
-    visits INTEGER DEFAULT 0, 
+    creator TEXT,
     created INTEGER DEFAULT (strftime('%s', 'now')),
-    maxVisits INTEGER DEFAULT NULL, 
-    expires INTEGER DEFAULT NULL
+    expires INTEGER DEFAULT NULL,
+    visits INTEGER DEFAULT 0, 
+    maxVisits INTEGER DEFAULT NULL
 )`).run();
 
 ctx.db.query(`CREATE TABLE IF NOT EXISTS analytics (

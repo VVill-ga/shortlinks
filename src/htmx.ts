@@ -1,6 +1,6 @@
 import { isAdmin, isAuthenticated } from "./auth"
 import { ctx } from "./index"
-import { getAllLinks } from "./links"
+import { getCount, getLinks } from "./links"
 
 const files = {
     template: await Bun.file("./public/index.html").text(),
@@ -12,16 +12,16 @@ const files = {
 
 let rewriterArgs = {
     admin: false,
+    user: "",
     page: "index",
-    tabs: {
-        active: ""
-    }
+    paginate: 0,
+    totalPages: 1,
 }
 const rewriters = {
     tabs: new HTMLRewriter()
         .on("li", {
             element(el) {
-                if(el.getAttribute("id") == rewriterArgs.tabs.active) {
+                if(el.getAttribute("id") == rewriterArgs.page) {
                     el.setAttribute("aria-selected", "true")
                 }
                 if(el.getAttribute("class") == "admin-only" && !rewriterArgs.admin) {
@@ -40,10 +40,10 @@ const rewriters = {
     links: new HTMLRewriter()
         .on("tbody", {
             element(el) {
-                let links = getAllLinks(rewriterArgs.admin);
+                let links = getLinks(rewriterArgs.user, rewriterArgs.paginate);
                 links.map((link) => {
                     el.append(`<tr>
-                        <td><a href="https://${ctx.config.domain+"/"+link.code}">${link.code}</a></td>
+                        <td><a href="https://${ctx.config.domain}/${link.code}">${link.code}</a></td>
                         <td>${link.link}</td>
                         <td>${link.visits}</td>
                         <td>${link.expires ? new Date(link.expires * 1000).toLocaleString() : "Never"}</td>
@@ -60,38 +60,29 @@ const rewriters = {
 export const index = (r: Request) => {
     // Always is authenticated
     rewriterArgs.admin = isAdmin(isAuthenticated(r) || "")
-    rewriterArgs.tabs.active = "index-tab"
     rewriterArgs.page = "index"
     return rewriters.template.transform(files.template)
 }
 
-export const hxindex = () => rewriters.index.transform(files.index)
-
 export const links = (r: Request) => {
     // Always is authenticated
     rewriterArgs.admin = isAdmin(isAuthenticated(r) || "")
-    rewriterArgs.tabs.active = "links-tab"
+    rewriterArgs.user = isAuthenticated(r) || ""
+    rewriterArgs.paginate = parseInt(new URL(r.url).searchParams.get("page") || "0")
+    rewriterArgs.totalPages = Math.ceil(getCount(rewriterArgs.user) / 10)
     rewriterArgs.page = "links"
     return rewriters.template.transform(files.template)
 }
 
-export const hxlinks = () => rewriters.links.transform(files.links)
-
 export const accounts = (r: Request) => {
     // Always is authenticated
     rewriterArgs.admin = isAdmin(isAuthenticated(r) || "")
-    rewriterArgs.tabs.active = "accounts-tab"
     rewriterArgs.page = "accounts"
     return rewriters.template.transform(files.template)
 }
-
-export const hxaccounts = () => rewriters.accounts.transform(files.accounts)
 
 export default {
     index,
     links,
     accounts,
-    hxindex,
-    hxlinks,
-    hxaccounts
 }
