@@ -5,6 +5,10 @@
             text-decoration: none;
             color: inherit;
         }
+        li[aria-selected="true"] {
+            border-bottom: 0.25rem solid var(--pico-muted-color);
+            padding-bottom: calc(var(--pico-nav-element-spacing-vertical) - 0.25rem);
+        }
     </style>
     <ul>
         <li id="index" class="tab" aria-controls="page">

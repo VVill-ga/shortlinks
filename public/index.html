@@ -1,48 +1,32 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Shortlinks</title>
-    <meta name="description" content="Create shortlinks, quickly and with extensibility.">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="color-scheme" content="light dark">
-    <link rel="icon" href="/favicon.ico" sizes="32x32">
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2.0.6/css/pico.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
-    <script src="modal.js"></script>
-    <style>
-      :root {
-        --pico-font-family: "Chakra Petch", sans-serif!important;
-      }
-      .hero{
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-      }
-      li[aria-selected="true"] {
-        border-bottom: 0.25rem solid var(--pico-muted-color);
-        padding-bottom: calc(var(--pico-nav-element-spacing-vertical) - 0.25rem);
-      }
-    </style>
-  </head>
-  <body>
-    <main id="page" class="hero container" hx-target="this" hx-swap="innerHTML"></main>
+<head>
+	<title>Shortlinks</title>
+	<meta name="description" content="Create shortlinks, quickly and with extensibility.">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="color-scheme" content="light dark">
+	<link rel="icon" href="/favicon.ico" sizes="32x32">
+	<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2.0.6/css/pico.min.css">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;700&display=swap" rel="stylesheet">
+	<script src="https://unpkg.com/htmx.org@2.0.4"></script>
+	<script src="modal.js"></script>
+	<style>
+		:root {
+			--pico-font-family: "Chakra Petch", sans-serif !important;
+		}
 
-    <!-- Modals -->
-    <dialog id="result-modal">
-      <article>
-        <header>
-          <h3>Shortlink Request Submitted</h3>
-        </header>
-        <p></p>
-        <footer>
-          <button autofocus data-target="result-modal" onclick="toggleModal(event)">Okay</button>
-        </footer>
-      </article>
-    </dialog>
-  </body>
+		.hero {
+			min-height: 100vh;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+		}
+	</style>
+</head>
+<body>
+	<main id="page" class="hero container" hx-target="this" hx-swap="innerHTML"></main>
+</body>
 </html>
