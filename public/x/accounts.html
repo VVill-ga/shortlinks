@@ -1,0 +1,76 @@
+<script>
+    function toggleNewUserModal(event) {
+        event.preventDefault();
+        const modal = document.getElementById("new-user-modal");
+        openModal(modal);
+    }
+    function toggleDeleteModal(event) {
+        event.preventDefault();
+        const modal = document.getElementById("delete-modal");
+        modal.querySelector("p").textContent = `Remove ${event.currentTarget.dataset.name}? This action cannot be undone.`;
+        modal.querySelector("button[type=submit]").setAttribute("hx-delete", "/user/" + event.currentTarget.dataset.name);
+        openModal(modal);
+    }
+</script>
+<p>As an administrator, you have the ability to create, delete, and edit
+    application users, including your own. If there is only one administrator
+    account left, you cannot delete it. Deleting your account will sign
+    you out of the application. You can also click on a username to see a
+    dedicated page with the links they have created. 
+</p>
+<table>
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Admin</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><a aria-controls="new-user-modal" onclick="toggleNewUserModal(event)">New User</a></td>
+            <td><hr /></td>
+            <td><hr /></td>
+        </tr>
+    </tbody>
+</table>
+<center><i></i></center>
+
+<dialog id="new-user-modal">
+    <form onsubmit="createUser(event)">
+        <article>
+            <header>
+                <h3>New User</h3>
+            </header>
+            <label for="username">Username</label>
+            <input type="text" name="username" />
+            <label for="password">Password</label>
+            <input type="password" name="password" />
+            <label for="admin">Admin</label>
+            <input type="checkbox" name="admin" />
+            <footer>
+                <fieldset role="group">
+                    <button autofocus class="outline" data-target="new-user-modal" onclick="toggleModal(event)">Cancel</button>
+                    <button type="submit" data-target="new-user-modal" onclick="toggleModal(event)">Create</button>
+                </fieldset>
+            </footer>
+        </article>
+    </form>
+</dialog>
+
+<dialog id="delete-modal">
+    <form>
+        <article>
+            <header>
+                <h3>Delete User?</h3>
+            </header>
+            <p></p>
+            <footer>
+                <fieldset role="group">
+                    <button autofocus class="outline" data-target="delete-modal" onclick="toggleModal(event)">Cancel</button>
+                    <button type="submit" data-target="delete-modal" onclick="toggleModal(event)">Delete</button>
+                </fieldset>
+            </footer>
+        </article>
+    </form>
+</dialog>
