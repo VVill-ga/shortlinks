@@ -1,10 +1,10 @@
 import yaml from "yaml";
 import {Database} from "bun:sqlite";
 
-import { attemptLogin, checkPassword, initAuth, isAdmin, isAuthenticated, logoutUser } from "./auth";
+import { attemptLogin, checkPassword, deleteAccount, initAuth, isAdmin, isAuthenticated, logoutUser } from "./auth";
 import { initCodesFile } from "./codes";
-import { followLink, postRedirect } from "./links";
-import routes from "./htmx";
+import { deleteRedirect, followLink, modifyRedirect, postRedirect } from "./links";
+import routes from "./rewriter";
 
 type config = {
     port: number,
@@ -64,6 +64,8 @@ const server = Bun.serve({
     port: Number(ctx.config.port) || 8008,
     async fetch(req): Promise<Response> {
         let path = new URL(req.url).pathname;
+        // On is used for actions with an id following them
+        let on = path.split("/")[1];
         switch(req.method){
             case "GET":
                 // Static file hosting. Omitting paths that require auth if requireLogin is set
@@ -78,7 +80,7 @@ const server = Bun.serve({
                 }
                 // Everything else requires Auth if logins are required
                 if(ctx.config.requireLogin && !isAuthenticated(req)){
-                    if(authRequired.includes(path))
+                    if(authRequired.includes(path) || adminRequired.includes(path))
                         return new Response(null, {headers: {Location: "/login.html"}, status: 302});
                     return new Response("Authentication required", {status: 401});
                 }
@@ -118,6 +120,22 @@ const server = Bun.serve({
                         return await postRedirect(req);
                     default:
                         return new Response("Invalid endpoint", {status: 404});
+                }
+            case "DELETE":
+                switch(on){
+                    case "link":
+                        return await deleteRedirect(req);
+                    case "user":
+                        return deleteAccount(req);
+                    default:
+                        return new Response("Invalid object type", {status: 404});
+                }
+            case "PUT":
+                switch(on){
+                    case "link":
+                        return await modifyRedirect(req);
+                    default:
+                        return new Response("Invalid object type", {status: 404});
                 }
             default:
                 return new Response("Invalid endpoint", {status: 405});

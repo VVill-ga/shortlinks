@@ -1,5 +1,5 @@
 import * as OTPAuth from "otpauth";
-import qrcode from "qrcode";
+import qrcode, { create } from "qrcode";
 import { ctx } from "./index";
 
 const defaultUsername = "admin";
@@ -24,7 +24,9 @@ export function initAuth(){
         name TEXT PRIMARY KEY,
         password TEXT,
         secret TEXT,
-        admin BOOLEAN
+        admin BOOLEAN,
+        active BOOLEAN,
+        lastLogin INTEGER
     )`).run();
 
     // Create an admin user if there are no users
@@ -65,9 +67,7 @@ export function initAuth(){
  * @param admin Is User Admin
  * @returns 
  */
-export function createUser(name: string, password: string, admin: boolean): string {
-    const exists = ctx.db.query("SELECT * FROM users WHERE name=?").get(name);
-    if(exists) return "";
+function createUser(name: string, password: string, admin: boolean): string {
     const secret = new OTPAuth.Secret();
     ctx.db.query("INSERT INTO users (name, password, secret, admin) VALUES (?1, ?2, ?3, ?4)").run(name, password, secret.base32, admin);
     return secret.base32;
@@ -219,4 +219,47 @@ function parseCookies(cookieHeader?: string | null): Record<string, string> {
       return [key, decodeURIComponent(value)];
     })
   );
+}
+
+export function getAccounts(user: string, page: number){
+    return ctx.db.query("SELECT * FROM users ORDER BY name DESC LIMIT ?1 OFFSET ?2").all(5, page * 5) as User[];
+}
+
+
+export async function deleteAccount(req: Request){
+    const username = new URL(req.url).pathname.split("/")[2];
+    if(!isAuthenticated(req))
+        return new Response("Unauthorized: Deleting an account requires authentication", {status: 401});
+    if(!isAdmin(isAuthenticated(req) || ""))
+        return new Response("Unauthorized: Deleting an account requires admin privileges", {status: 401});
+    if(!username)
+        return new Response("Missing username", {status: 400});
+    // Check if user exists
+    const user = ctx.db.query("SELECT * FROM users WHERE name=?").get(username) as User;
+    if(!user) 
+        return new Response("User not found", {status: 404});
+    // Cannot delete last admin
+    const adminCount = ctx.db.query("SELECT COUNT(*) AS count FROM users WHERE admin=true").get() as {count: number};
+    if(user.admin && adminCount.count <= 1) 
+        return new Response("Cannot delete last admin user", {status: 400});
+    // Checks pass
+    ctx.db.query("DELETE FROM users WHERE name=?").run(user.name);
+    return new Response(null, {status: 200});
+}
+
+export async function createAccount(req: Request): Promise<Response> {
+    if(!isAdmin(isAuthenticated(req) || ""))
+        return new Response("Unauthorized: Creating an account requires admin privileges", {status: 401});
+    const data = await req.formData()
+    const body = {
+        name: data.get("name") as string,
+        password: data.get("password") as string,
+        admin: data.get("admin") == "on"
+    };
+    if(!body.name || !body.password)
+        return new Response("Missing required fields", {status: 400});
+    if(ctx.db.query("SELECT * FROM users WHERE name=?").get(body.name) as User)
+        return new Response("User already exists", {status: 400});
+    createUser(body.name, body.password, false);
+    return new Response(null, {status: 200});
 }

@@ -1,18 +1,26 @@
 <script>
     function toggleDeleteModal(event) {
         event.preventDefault();
+        const link = event.currentTarget.dataset.link;
+        const url = event.currentTarget.dataset.url;
         const modal = document.getElementById("delete-modal");
-        modal.querySelector("p").textContent = `Remove ${event.currentTarget.dataset.link} directing to ${event.currentTarget.dataset.url}?`;
-        modal.querySelector("button[type=submit]").setAttribute("hx-delete", "/link" + event.currentTarget.dataset.link);
+        modal.querySelector("p").textContent = `Remove ${link} directing to ${url}?`;
+        modal.querySelector("button[type=submit]").setAttribute("hx-delete", "/link" + link);
+        modal.querySelector("button[type=submit]").setAttribute("hx-target", "#link-"+ link.split('/')[1]);
         openModal(modal);
+        htmx.process(modal);
     }
     function toggleEditModal(event) {
         event.preventDefault();
+        const link = event.currentTarget.dataset.link;
+        const url = event.currentTarget.dataset.url;
         const modal = document.getElementById("edit-modal");
-        modal.querySelector("input[name=link]").value = event.currentTarget.dataset.url;
-        modal.querySelector("button[type=submit]").setAttribute("hx-put", "/link" + event.currentTarget.dataset.link);
-        modal.querySelector("p:first-of-type").textContent = `Change the destination of ${event.currentTarget.dataset.link} to:`;
+        modal.querySelector("input[name=link]").value = url;
+        modal.querySelector("p:first-of-type").textContent = `Change the destination of ${link} to:`;
+        modal.querySelector("button[type=submit]").setAttribute("hx-put", "/link" + link);
+        modal.querySelector("button[type=submit]").setAttribute("hx-target", "#link-"+ link.split('/')[1]);
         openModal(modal);
+        htmx.process(modal);
     }
 </script>
 <p>Here you can manage links you have created, or if you are an administrator,
@@ -43,8 +51,8 @@
             <p>This action cannot be undone.</p>
             <footer>
                 <fieldset role="group">
-                    <button autofocus class="outline" data-target="delete-modal" onclick="toggleModal(event)">Cancel</button>
-                    <button type="submit" data-target="delete-modal" onclick="toggleModal(event)" hx-delete="/link">Delete</button>
+                    <button class="outline" data-target="delete-modal" onclick="toggleModal(event)">Cancel</button>
+                    <button type="submit" data-target="delete-modal" onclick="toggleModal(event)" hx-swap="outerHTML">Delete</button>
                 </fieldset>
             </footer>
         </article>
@@ -62,8 +70,8 @@
             <input type="text" placeholder="https://newlink.com" name="link" />
             <footer>
                 <fieldset role="group">
-                    <button autofocus class="outline" data-target="edit-modal" onclick="toggleModal(event)">Cancel</button>
-                    <button type="submit" data-target="edit-modal" onclick="toggleModal(event)" hx-include="[name=link]" hx-put="/link">Save</button>
+                    <button class="outline" data-target="edit-modal" onclick="toggleModal(event)">Cancel</button>
+                    <button type="submit" data-target="edit-modal" onclick="toggleModal(event)" hx-include="[name=link]" hx-swap="outerHTML">Save</button>
                 </fieldset>
             </footer>
         </article>

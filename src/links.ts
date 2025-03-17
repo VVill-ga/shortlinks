@@ -80,6 +80,54 @@ export async function postRedirect(req: Request): Promise<Response> {
 }
 
 /**
+ * Deletes a redirect from the database
+ * 
+ * @param req HTTP Request to delete a redirect
+ * @returns HTTP Response
+ */
+export async function deleteRedirect(req: Request): Promise<Response> {
+    const code = new URL(req.url).pathname.split("/")[2];
+    const redirect = ctx.db.query("SELECT * FROM links WHERE code=?").get(code) as dbRow;
+    if(!redirect)
+        return new Response("Redirect not found", {status: 404});
+    if(!isAdmin(isAuthenticated(req) || "") && redirect.creator !== isAuthenticated(req))
+        return new Response("Unauthorized", {status: 403});
+    ctx.db.query("DELETE FROM links WHERE code=?").run(code);
+    return new Response(null, {status: 200});
+}
+
+/**
+ * Modifies a redirect in the database
+ * 
+ * @param req HTTP Request to modify a redirect
+ * @returns HTTP Response    
+ */
+export async function modifyRedirect(req: Request): Promise<Response> {
+    const code = new URL(req.url).pathname.split("/")[2];
+    const redirect = ctx.db.query("SELECT * FROM links WHERE code=?").get(code) as dbRow;
+    if(!redirect)
+        return new Response("Redirect not found", {status: 404});
+    if(!isAdmin(isAuthenticated(req) || "") && redirect.creator !== isAuthenticated(req))
+        return new Response("Unauthorized", {status: 403});
+    const body = await req.formData()
+    const link = body.get("link") as string;
+    if(!link)
+        return new Response("Missing new destination link", {status: 400});
+    ctx.db.query("UPDATE links SET link=? WHERE code=?").run(link, code);
+    return new Response(`<tr id="link-${code}">
+        <td><a href="https://${ctx.config.domain}/${code}">${code}</a></td>
+        <td style="line-break: anywhere;">${link}</td>
+        <td>${redirect.visits}</td>
+        <td>${redirect.expires ? new Date(redirect.expires * 1000).toLocaleString() : "Never"}</td>
+        <td nowrap>
+            <u aria-controls="edit-modal" onclick="toggleEditModal(event)" data-link="/${code}" data-url="${link}">Edit</u>
+            <span class="separator">|</span>
+            <u aria-controls="delete-modal" onclick="toggleDeleteModal(event)" data-link="/${code}" data-url="${link}">Delete</u>
+        </td>
+    </tr>`, {status: 200});
+}
+
+/**
  * Attempts to follow a redirect in the database
  * 
  * @param req HTTP Request looking for a redirect
@@ -118,8 +166,8 @@ export function followLink(req: Request): Response | null {
 
 export function getLinks(user: string, page: number): dbRow[] {
     if(isAdmin(user))
-        return ctx.db.query("SELECT * FROM links ORDER BY created DESC LIMIT ?1 OFFSET ?2").all(10, page * 10) as dbRow[];
-    return ctx.db.query("SELECT * FROM links WHERE creator=? ORDER BY created DESC LIMIT ?1 OFFSET ?2").all(10, page * 10, user) as dbRow[];
+        return ctx.db.query("SELECT * FROM links ORDER BY created DESC LIMIT ?1 OFFSET ?2").all(5, page * 5) as dbRow[];
+    return ctx.db.query("SELECT * FROM links WHERE creator=? ORDER BY created DESC LIMIT ?1 OFFSET ?2").all(5, page * 5, user) as dbRow[];
 }
 
 export function getCount(user: string): number {

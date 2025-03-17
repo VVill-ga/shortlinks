@@ -1,4 +1,4 @@
-import { isAdmin, isAuthenticated } from "./auth"
+import { getAccounts, isAdmin, isAuthenticated } from "./auth"
 import { ctx } from "./index"
 import { getCount, getLinks } from "./links"
 
@@ -42,19 +42,35 @@ const rewriters = {
             element(el) {
                 let links = getLinks(rewriterArgs.user, rewriterArgs.paginate);
                 links.map((link) => {
-                    el.append(`<tr>
+                    el.append(`<tr id="link-${link.code}">
                         <td><a href="https://${ctx.config.domain}/${link.code}">${link.code}</a></td>
-                        <td>${link.link}</td>
+                        <td style="line-break: anywhere;">${link.link}</td>
                         <td>${link.visits}</td>
                         <td>${link.expires ? new Date(link.expires * 1000).toLocaleString() : "Never"}</td>
-                        <td>
-                            <a hx-delete="/links/${link.code}" hx-swap="outerHTML">Delete</a>
+                        <td nowrap>
+                            <u aria-controls="edit-modal" onclick="toggleEditModal(event)" data-link="/${link.code}" data-url="${link.link}">Edit</u>
+                            <span class="separator">|</span>
+                            <u aria-controls="delete-modal" onclick="toggleDeleteModal(event)" data-link="/${link.code}" data-url="${link.link}">Delete</u>
                         </td>
                     </tr>`, {html: true})
                 })
             }
         }),
-    accounts: new HTMLRewriter(),
+    accounts: new HTMLRewriter()
+        .on("tbody", {
+            element(el) {
+                const users = getAccounts(rewriterArgs.user, rewriterArgs.paginate);
+                users.map((user) => {
+                    el.append(`<tr id="user-${user.name}">
+                        <td>${user.name}</td>
+                        <td>${user.admin ? "Yes" : "No"}</td>
+                        <td>
+                            <u aria-controls="delete-modal" onclick="toggleDeleteModal(event)" data-name="${user.name}">Delete</u>
+                        </td>
+                    </tr>`, {html: true})
+                })
+            }
+        }),
 }
 
 export const index = (r: Request) => {
@@ -69,7 +85,7 @@ export const links = (r: Request) => {
     rewriterArgs.admin = isAdmin(isAuthenticated(r) || "")
     rewriterArgs.user = isAuthenticated(r) || ""
     rewriterArgs.paginate = parseInt(new URL(r.url).searchParams.get("page") || "0")
-    rewriterArgs.totalPages = Math.ceil(getCount(rewriterArgs.user) / 10)
+    rewriterArgs.totalPages = Math.ceil(getCount(rewriterArgs.user) / 5)
     rewriterArgs.page = "links"
     return rewriters.template.transform(files.template)
 }
@@ -77,6 +93,9 @@ export const links = (r: Request) => {
 export const accounts = (r: Request) => {
     // Always is authenticated
     rewriterArgs.admin = isAdmin(isAuthenticated(r) || "")
+    rewriterArgs.user = isAuthenticated(r) || ""
+    rewriterArgs.paginate = parseInt(new URL(r.url).searchParams.get("page") || "0")
+    rewriterArgs.totalPages = Math.ceil(getCount(rewriterArgs.user) / 5)
     rewriterArgs.page = "accounts"
     return rewriters.template.transform(files.template)
 }
