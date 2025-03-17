@@ -24,6 +24,26 @@
 			flex-direction: column;
 			justify-content: center;
 		}
+		.error {
+			--pico-border-color: var(--pico-form-element-invalid-border-color)
+		}
+		.notif {
+			position: fixed;
+			z-index: 1;
+			bottom: 0;
+			right: 0;
+			border: var(--pico-border-color) solid 0.125rem;
+			margin-right: var(--pico-block-spacing-horizontal);
+			margin-bottom: var(--pico-block-spacing-vertical);
+			padding: 0.5rem;
+		}
+		.notif p {
+			overflow: auto;
+			max-width: 15rem;
+			max-height: 4rem;
+			font-size: 0.875rem;
+			margin-bottom: 0.5rem;
+		}
 	</style>
 </head>
 <body>
